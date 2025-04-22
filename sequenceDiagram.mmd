@@ -1,0 +1,93 @@
+sequenceDiagram
+    participant Admin
+    participant FS as Flower Server (Requester)
+    participant BC as Blockchain Connector
+    participant IPFS as IPFS Connector
+    participant RO as Rollup Operator
+    participant L1 as Layer-1 Contract
+    participant L2 as Layer-2 Contract
+    participant FC as Flower Clients
+    participant V as Validators
+
+    Admin->>FS: initiate_task(params)
+    FS->>BC: create_task(task_params)
+    BC->>L1: createTask(params)
+    L1-->>BC: task_id
+    BC-->>FS: task_id
+    
+    FS->>IPFS: upload_initial_model(model)
+    IPFS-->>FS: model_hash
+    
+    FS->>BC: register_model(task_id, model_hash)
+    BC->>L1: registerModel(task_id, model_hash)
+    
+    FS->>FS: configure_server()
+    
+    loop For each training round
+        FS->>FS: select_clients()
+        FS->>FC: fit(global_model, config)
+        
+        par Client Training
+            FC->>IPFS: download_model(model_hash)
+            IPFS-->>FC: model_weights
+            FC->>FC: train_locally()
+            FC->>IPFS: upload_update(updated_weights)
+            IPFS-->>FC: update_hash
+            FC->>BC: submit_update(task_id, update_hash)
+            BC->>L2: submitUpdate(task_id, update_hash)
+        end
+        
+        L2-->>RO: notify_batch_ready()
+        RO->>L2: get_batch_updates()
+        L2-->>RO: updates_hashes
+        
+        RO->>IPFS: download_updates(update_hashes)
+        IPFS-->>RO: updates
+        
+        RO->>RO: apply_krum_defense(updates)
+        RO->>RO: aggregate_result()
+        RO->>IPFS: upload_aggregated_model(result)
+        IPFS-->>RO: aggregated_hash
+        
+        RO->>RO: generate_state_proof()
+        RO->>L2: submitStateRoot(state_root, proof)
+        L2->>L1: proposeStateUpdate(state_root)
+        
+        L1->>L1: start_challenge_period()
+        
+        Note over L1,V: Optimistic Challenge Period (e.g. 7 days)
+        
+        opt Challenge Case
+            V->>L1: submitChallenge(evidence)
+            L1->>L2: requestProof(challenge_id)
+            L2->>RO: generate_fraud_proof(challenge_id)
+            RO->>L1: submitFraudProof(proof)
+            L1->>L1: verifyProof(proof)
+            
+            alt Challenge Successful
+                L1->>L1: revert_update()
+                L1->>L1: penalize_operator()
+                L1->>FS: notify_challenge_success()
+            else Challenge Failed
+                L1->>L1: penalize_challenger()
+                L1->>L1: continue_process()
+            end
+        end
+        
+        L1->>L1: finalize_update()
+        L1-->>FS: notify_round_completed()
+        
+        FS->>IPFS: get_new_global_model(aggregated_hash)
+        IPFS-->>FS: new_global_model
+        
+        FS->>FS: evaluate_global_model()
+        
+        alt Task Complete
+            FS->>BC: finalize_task(task_id)
+            BC->>L1: finalizeTask(task_id)
+            L1->>L1: distribute_rewards()
+        else Continue Training
+            FS->>BC: start_new_round(task_id)
+            BC->>L1: startNewRound(task_id)
+        end
+    end
