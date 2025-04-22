@@ -1,4 +1,4 @@
-# BFL-optimistic-poison-defend system
+# BFL-optimistic-poison-defend
 
 A decentralized federated learning system leveraging blockchain technology to provide secure, verifiable, and poison-resistant model training.
 
@@ -118,8 +118,8 @@ Implements robust aggregation techniques:
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/blockchain-federated-learning.git
-cd blockchain-federated-learning
+git clone git@github.com:lujames13/BFL-optimistic-poison-defend.git
+cd BFL-optimistic-poison-defend
 
 # Install dependencies
 npm install
