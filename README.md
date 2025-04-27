@@ -1,161 +1,163 @@
-# BFL-optimistic-poison-defend
+# BFL-Optimistic-Poison-Defend
 
-A decentralized federated learning system leveraging blockchain technology to provide secure, verifiable, and poison-resistant model training.
+一個基於區塊鏈技術的去中心化聯邦學習系統，提供安全、可驗證且具抗毒性的模型訓練功能。
 
-## Project Overview
+## 項目概述
 
-This project implements a blockchain-based federated learning system that combines the Flower framework for distributed machine learning with Arbitrum's Layer-2 rollup technology. The system uses IPFS for decentralized model storage and implements Krum defense mechanisms against poisoning attacks, all secured through an optimistic challenge mechanism.
+本項目實現了一個以測試驅動開發 (TDD) 方法為基礎的區塊鏈聯邦學習系統，整合了 Flower 框架用於分散式機器學習與 Arbitrum 的 Layer-2 捲軸技術。系統使用 IPFS 進行去中心化模型存儲，並實現 Krum 防禦機制抵禦投毒攻擊。
 
-## Architecture
+## 架構
 
-The system follows a multi-layer architecture:
+系統採用多層架構設計：
 
-1. **Federated Learning Layer**: Implemented using Flower framework for client-server communication
-2. **Storage Layer**: IPFS for decentralized storage of models and updates
-3. **Execution Layer**: Arbitrum rollup for efficient, scalable computation
-4. **Security Layer**: Krum aggregation for Byzantine-fault tolerance
+1. **聯邦學習層**：使用 Flower 框架實現客戶端-服務器通信
+2. **存儲層**：IPFS 用於去中心化模型和更新存儲
+3. **執行層**：Arbitrum 捲軸提供高效、可擴展的計算能力
+4. **安全層**：Krum 聚合實現拜占庭容錯能力
 
-## System Flow
+## 系統流程
 
-1. A requester initiates a federated learning task via the Flower Server
-2. The initial model is uploaded to IPFS and registered on-chain
-3. Selected clients download the model, train locally, and submit updates
-4. Updates are collected and processed by the Rollup Operator
-5. Krum defense is applied to filter poisoned updates
-6. Aggregated results are posted to Layer-2 with proofs
-7. An optimistic challenge period allows validators to contest results
-8. Finalized models are propagated for the next round or task completion
+1. 請求者通過 Flower 服務器發起聯邦學習任務
+2. 初始模型上傳至 IPFS 並在鏈上註冊
+3. 選定的客戶端下載模型、本地訓練並提交更新
+4. 更新通過 Krum 防禦機制進行篩選
+5. 聚合結果通過 Arbitrum 發佈與確認
+6. 最終模型用於下一輪訓練或任務完成
 
-## Project Structure
+## 測試驅動開發方法
 
-```
-/
-├── contracts/
-│   └── FederatedLearning.sol    # Main smart contract for task management
-│
-├── fl/
-│   ├── blockchain_connector.py  # Interface between FL system and blockchain
-│   ├── ipfs_connector.py        # IPFS integration for model storage
-│   ├── client.py                # Federated learning client implementation
-│   └── server.py                # Federated learning server implementation
-│
-├── defense/
-│   └── krum.py                  # Krum defense algorithm implementation
-│
-├── rollup/
-│   ├── operator.py              # Rollup operator implementation
-│   └── validator.py             # Challenge validator implementation
-│
-├── ignition/
-│   └── deploy.js                # Hardhat deployment scripts
-│
-├── test/
-│   ├── contracts/               # Smart contract tests
-│   └── fl/                      # Federated learning tests
-│
-├── hardhat.config.js            # Hardhat configuration
-├── package.json                 # Dependencies
-└── README.md                    # This file
-```
+本項目採用測試驅動開發 (TDD) 方法，確保每個功能模塊都有完整的測試覆蓋：
 
-## Key Components
+1. 先撰寫測試：為每個功能模塊定義預期行為
+2. 實現功能：根據測試需求開發功能
+3. 通過測試確認：確保實現符合預期行為
+4. 重構優化：在保持測試通過的前提下改進代碼
 
-### Flower Server (Requester)
+## 主要組件
 
-The Flower Server acts as the main coordinator for the federated learning process:
-- Initiates learning tasks
-- Selects clients for each round
-- Manages the global model
-- Evaluates training progress
-- Interfaces with blockchain through the connector
+### 智能合約 (單一合約架構)
 
-### Flower Clients
+智能合約實現了以下核心功能：
+- 任務管理：創建、監控和完成聯邦學習任務
+- 輪次管理：初始化、追蹤和完成訓練輪次
+- 客戶端管理：註冊、選擇和貢獻評估
+- Krum 防禦：抵禦惡意更新的整合式防禦機制
+- 獎勵系統：基於貢獻度的獎勵計算與分發
 
-Clients participate in the federated learning process:
-- Download the current global model from IPFS
-- Perform local training on private data
-- Upload model updates to IPFS
-- Submit update references to the blockchain
+### IPFS 連接器
 
-### Blockchain Connector
+IPFS 連接器負責模型和更新的去中心化存儲：
+- 模型上傳與下載：高效處理機器學習模型
+- 更新管理：存儲和檢索模型更新
+- 雜湊驗證：確保模型完整性和真實性
+- 批次操作：高效處理多個更新
+- 錯誤處理：實現重試機制以提高穩定性
 
-Bridges the federated learning system with the blockchain:
-- Creates tasks on-chain
-- Registers model updates
-- Monitors task state
-- Handles event notifications
+### 區塊鏈連接器
 
-### IPFS Connector
+區塊鏈連接器連接聯邦學習系統與 Arbitrum 網絡：
+- Arbitrum 整合：適配 Layer-2 特定功能
+- 交易管理：提交、監控和重試機制
+- 事件處理：事件監聽與響應
+- Gas 優化：減少交易成本
 
-Manages decentralized storage operations:
-- Uploads models and updates to IPFS
-- Retrieves models and updates from IPFS
-- Verifies content integrity
+### 聯邦學習核心
 
-### Rollup Operator
+基於 Flower 框架的聯邦學習實現：
 
-Handles the Layer-2 aggregation and validation:
-- Collects update references from Layer-2
-- Downloads actual updates from IPFS
-- Applies Krum defense to filter poisoned updates
-- Aggregates valid updates into a new global model
-- Generates state proofs for verification
-- Submits results back to Layer-2
+**服務器端**：
+- 任務初始化與配置
+- 客戶端選擇策略
+- 全局模型管理與聚合
+- 模型評估與進度追蹤
 
-### Smart Contracts
+**客戶端**：
+- 本地訓練邏輯
+- 模型更新生成
+- 區塊鏈更新提交
+- 安全通信機制
 
-Two-layer contract system:
-- **Layer-1 Contract**: Handles task creation, challenge resolution, and finalization
-- **Layer-2 Contract**: Manages update submissions and batch processing
+### 防禦機制
 
-### Defense Mechanisms
+整合 Krum 算法抵禦投毒攻擊：
+- 更新距離計算
+- 鄰居選擇邏輯
+- 分數機制
+- 最佳更新選擇
 
-Implements robust aggregation techniques:
-- **Krum**: Selects the most representative update by minimizing the sum of distances to closest neighbors
-- **Challenge Mechanism**: Allows validators to contest suspicious results during the challenge period
+### 攻擊模擬
 
-## Setup and Installation
+實現多種攻擊模型用於測試防禦效果：
+- 標籤翻轉攻擊
+- 模型替換攻擊
+- 拜占庭行為模擬
+
+## 設置與安裝
 
 ```bash
-# Clone the repository
-git clone git@github.com:lujames13/BFL-optimistic-poison-defend.git
+# 克隆儲存庫
+git clone https://github.com/yourusername/BFL-optimistic-poison-defend.git
 cd BFL-optimistic-poison-defend
 
-# Install dependencies
+# 安裝依賴
 npm install
 pip install -r requirements.txt
 
-# Compile smart contracts
+# 編譯智能合約
 npx hardhat compile
 
-# Deploy to Arbitrum testnet
-npx hardhat run ignition/deploy.js --network arbitrum-goerli
+# 部署到 Arbitrum 測試網
+npx hardhat run scripts/deploy.js --network arbitrum-goerli
 ```
 
-## Usage
+## 使用方法
 
-```python
-# Start the Flower server (Requester)
-python fl/server.py --task_params "params.json" --initial_model "model.h5"
+```bash
+# 啟動 Flower 服務器 (請求者)
+python fl/server/server.py --task_params "config/fl_params.json" --initial_model "model.h5"
 
-# Run a Flower client
-python fl/client.py --client_id "client1" --data_path "data/"
+# 運行 Flower 客戶端
+python fl/client/client.py --client_id "client1" --data_path "data/"
 
-# Run the Rollup Operator
-python rollup/operator.py
+# 運行攻擊模擬
+python attack/label_flipping.py --client_id "malicious1" --intensity 0.3
 
-# Deploy a validator
-python rollup/validator.py
+# 運行評估
+python evaluation/defense_effectiveness.py --results_dir "results/"
 ```
 
-## Security Features
+## 性能與安全特性
 
-- **Anti-Poison Defense**: Krum algorithm filters out malicious updates
-- **Optimistic Rollups**: Efficient computation with fraud proofs
-- **Challenge Period**: 7-day window for contesting suspicious results
-- **Penalties**: Economic incentives against malicious behavior
-- **Verification Proofs**: Cryptographic validation of computation integrity
+- **抗投毒防禦**：Krum 算法過濾惡意更新
+- **效率優化**：基於 Arbitrum Layer-2 的高效交易
+- **可驗證性**：所有操作都在區塊鏈上可追踪
+- **激勵機制**：獎勵貢獻度高的客戶端
+- **可擴展性**：適應大規模分布式學習場景
 
-## License
+## 開發路線圖
 
-[MIT License](LICENSE)
+本項目分為四個主要階段開發：
+
+### 階段 1 (2 週)
+- 完成智能合約基礎設施和任務管理
+- 完成 IPFS 模型儲存功能
+- 完成 Arbitrum 連接設定
+- 完成基本測試環境設置
+
+### 階段 2 (2 週)
+- 完成輪次管理和客戶端管理
+- 完成 Krum 防禦機制合約部分
+- 完成區塊鏈交易和事件處理
+- 開始 Flower 伺服器和客戶端實作
+
+### 階段 3 (2 週)
+- 完成 Flower 伺服器和客戶端
+- 完成 Krum 防禦策略整合
+- 實作並測試惡意客戶端攻擊
+- 開始防禦效果評估
+
+### 階段 4 (2 週)
+- 完成攻擊模擬和防禦效果評估
+- 完成 Arbitrum 部署和 Gas 分析
+- 完成性能評估和視覺化
+- 整合所有組件並進行最終測試

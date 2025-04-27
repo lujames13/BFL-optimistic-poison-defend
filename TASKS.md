@@ -1,283 +1,346 @@
-# BFL-Optimistic-Poison-Defend Comprehensive Implementation Tasks
+# BFL-Optimistic-Poison-Defend 測試導向實作任務清單
 
-## 1. Smart Contract Development
-### Layer-1 Contract (FederatedLearning.sol)
-- [ ] Task Management
-  - [ ] Implement task creation function
-  - [ ] Add task parameters validation
-  - [ ] Create task state management
-  - [ ] Implement task finalization logic
-- [ ] Round Management
-  - [ ] Implement round initialization
-  - [ ] Create round state tracking
-  - [ ] Add round completion logic
-  - [ ] Implement round evaluation
-- [ ] Client Management
-  - [ ] Create client registration mechanism
-  - [ ] Implement client selection logic
-  - [ ] Add client contribution tracking
-  - [ ] Create client verification system
-- [ ] Challenge Mechanism
-  - [ ] Implement challenge submission
-  - [ ] Add challenge verification
-  - [ ] Create challenge period management
-  - [ ] Implement proof verification
-- [ ] Reward System
-  - [ ] Add reward calculation logic
-  - [ ] Implement reward distribution
-  - [ ] Create penalty mechanism
-  - [ ] Add stake management
+本任務清單採用測試驅動開發 (TDD) 方法，確保每個功能區塊可獨立完成並通過測試。
 
-### Layer-2 Contract
-- [ ] Update Management
-  - [ ] Implement update submission
-  - [ ] Add batch processing
-  - [ ] Create state root management
-  - [ ] Implement fraud proof generation
-- [ ] State Management
-  - [ ] Implement state transitions
-  - [ ] Create state verification
-  - [ ] Add state rollback mechanism
-  - [ ] Implement state finalization
+## 1. 智能合約開發 (單一合約架構)
+### 1.1 基礎設施 [優先度: 高]
+- [ ] 定義基本資料結構與狀態變數
+  - [ ] 撰寫測試：驗證狀態變數初始化
+  - [ ] 實作：定義任務、輪次、客戶端、更新等結構
+  - [ ] 測試通過確認
 
-## 2. IPFS Integration
-### IPFS Connector Enhancement
-- [ ] Model Storage
-  - [ ] Adapt existing connector for model upload
-  - [ ] Optimize model download
-  - [ ] Create hash verification
-  - [ ] Implement content addressing
-- [ ] Update Management
-  - [ ] Add update storage functionality
-  - [ ] Implement efficient update retrieval
-  - [ ] Create batch operations
-  - [ ] Add error handling and retry mechanisms
-- [ ] Optimization
-  - [ ] Implement caching for frequently accessed models
-  - [ ] Add compression for large models
-  - [ ] Create pinning strategy for important models
-  - [ ] Optimize for bandwidth efficiency
+- [ ] 實作權限管理系統
+  - [ ] 撰寫測試：驗證只有授權角色可執行受限功能
+  - [ ] 實作：權限檢查修飾器和角色分配
+  - [ ] 測試通過確認
 
-## 3. Blockchain Connector Enhancement
-### Integration with Arbitrum
-- [ ] Connection Management
-  - [ ] Adapt existing connector for Arbitrum
-  - [ ] Implement L2-specific transaction handling
-  - [ ] Add gas optimization for L2
-  - [ ] Create connection fallback mechanisms
-- [ ] Transaction Management
-  - [ ] Implement transaction submission
-  - [ ] Add transaction monitoring
-  - [ ] Create transaction retry logic
-  - [ ] Implement receipt validation
-- [ ] Event Handling
-  - [ ] Add event listening mechanisms
-  - [ ] Implement event processing
-  - [ ] Create event-based triggers
-  - [ ] Add error handling for events
+### 1.2 任務管理 [優先度: 高]
+- [ ] 任務建立功能
+  - [ ] 撰寫測試：驗證任務成功建立與參數儲存
+  - [ ] 實作：createTask 函數，包含參數驗證
+  - [ ] 測試通過確認
 
-## 4. Federated Learning Core
-### Flower Server Implementation
-- [ ] Task Management
-  - [ ] Implement task initialization
-  - [ ] Add client selection strategy
-  - [ ] Create round management
-  - [ ] Implement task evaluation
-- [ ] Model Management
-  - [ ] Add global model handling
-  - [ ] Implement model aggregation
-  - [ ] Create model evaluation
-  - [ ] Add progress tracking
-- [ ] Blockchain Integration
-  - [ ] Implement task creation on-chain
-  - [ ] Add model registration
-  - [ ] Create round status updates
-  - [ ] Implement reward distribution triggers
+- [ ] 任務狀態管理
+  - [ ] 撰寫測試：驗證任務狀態轉換
+  - [ ] 實作：任務狀態更新邏輯
+  - [ ] 測試通過確認
 
-### Flower Client Implementation
-- [ ] Training Management
-  - [ ] Implement local training logic
-  - [ ] Add model update generation
-  - [ ] Create weight serialization
-  - [ ] Implement progress tracking
-- [ ] Communication
-  - [ ] Add server communication mechanisms
-  - [ ] Implement IPFS model retrieval
-  - [ ] Create blockchain update submission
-  - [ ] Add error handling and retry logic
-- [ ] Security
-  - [ ] Implement secure key management
-  - [ ] Add update verification
-  - [ ] Create secure storage for models
-  - [ ] Implement authentication mechanisms
+- [ ] 任務完成邏輯
+  - [ ] 撰寫測試：驗證任務完成條件與結果
+  - [ ] 實作：completeTask 函數
+  - [ ] 測試通過確認
 
-## 5. Defense Mechanisms
-### Krum Algorithm Implementation
-- [ ] Core Algorithm
-  - [ ] Implement distance calculation between updates
-  - [ ] Add neighbor selection logic
-  - [ ] Create scoring mechanism
-  - [ ] Implement final selection algorithm
-- [ ] Optimization
-  - [ ] Add parallel processing for large batches
-  - [ ] Implement early stopping criteria
-  - [ ] Create parameter optimization
-  - [ ] Add performance profiling
-- [ ] Integration
-  - [ ] Implement with rollup operator
-  - [ ] Add compatibility with model formats
-  - [ ] Create adaptable parameters
-  - [ ] Implement visualization for analysis
+### 1.3 輪次管理 [優先度: 高]
+- [ ] 輪次初始化
+  - [ ] 撰寫測試：驗證輪次正確初始化
+  - [ ] 實作：startRound 函數
+  - [ ] 測試通過確認
 
-## 6. Rollup System Development
-### Rollup Operator
-- [ ] Batch Processing
-  - [ ] Implement update collection
-  - [ ] Add batch verification
-  - [ ] Create state management
-  - [ ] Implement proof generation
-- [ ] Aggregation
-  - [ ] Implement Krum-based aggregation
-  - [ ] Add fallback aggregation mechanisms
-  - [ ] Create verification steps
-  - [ ] Implement result submission
-- [ ] Integration
-  - [ ] Add IPFS interaction for model retrieval
-  - [ ] Implement blockchain submission
-  - [ ] Create monitoring and logging
-  - [ ] Add error recovery mechanisms
+- [ ] 輪次狀態追蹤
+  - [ ] 撰寫測試：驗證輪次狀態轉換
+  - [ ] 實作：輪次狀態更新邏輯
+  - [ ] 測試通過確認
 
-### Validator Implementation
-- [ ] Challenge Management
-  - [ ] Implement challenge detection
-  - [ ] Add proof verification
-  - [ ] Create challenge submission
-  - [ ] Implement reward claiming
-- [ ] Monitoring
-  - [ ] Add state tracking
-  - [ ] Implement fraud detection
-  - [ ] Create alert system
-  - [ ] Add logging and reporting
-- [ ] Security
-  - [ ] Implement secure key management
-  - [ ] Add access control
-  - [ ] Create audit logging
-  - [ ] Implement isolation mechanisms
+- [ ] 輪次完成邏輯
+  - [ ] 撰寫測試：驗證輪次完成條件與結果
+  - [ ] 實作：completeRound 函數
+  - [ ] 測試通過確認
 
-## 7. Integration and Testing
-### Component Integration
-- [ ] Server Integration
-  - [ ] Connect server with blockchain connector
-  - [ ] Integrate server with IPFS connector
-  - [ ] Add rollup operator communication
-  - [ ] Implement full workflow testing
-- [ ] Client Integration
-  - [ ] Connect client with server
-  - [ ] Integrate client with blockchain connector
-  - [ ] Add IPFS functionality
-  - [ ] Implement full workflow testing
-- [ ] End-to-End Testing
-  - [ ] Create test scenario for full training cycle
-  - [ ] Implement multi-client testing
-  - [ ] Add challenge and validation testing
-  - [ ] Create performance testing
+### 1.4 客戶端管理 [優先度: 中]
+- [ ] 客戶端註冊機制
+  - [ ] 撰寫測試：驗證客戶端註冊結果
+  - [ ] 實作：registerClient 函數
+  - [ ] 測試通過確認
 
-### Security Testing
-- [ ] Attack Simulation
-  - [ ] Implement poisoning attack scenarios
-  - [ ] Add model inversion attempts
-  - [ ] Create byzantine behavior testing
-  - [ ] Implement network partition simulation
-- [ ] Defense Verification
-  - [ ] Test Krum defense against attacks
-  - [ ] Add metrics for defense effectiveness
-  - [ ] Create comparative analysis
-  - [ ] Implement visualization of results
+- [ ] 客戶端選擇邏輯
+  - [ ] 撰寫測試：驗證客戶端選擇算法
+  - [ ] 實作：selectClients 函數
+  - [ ] 測試通過確認
 
-## 8. Research Benchmarking and Evaluation
-### Performance Metrics
-- [ ] Model Evaluation
-  - [ ] Implement accuracy measurement
-  - [ ] Add convergence speed tracking
-  - [ ] Create robustness metrics
-  - [ ] Implement comparison framework
-- [ ] System Performance
-  - [ ] Add transaction cost analysis
-  - [ ] Implement gas usage tracking
-  - [ ] Create latency measurements
-  - [ ] Add throughput evaluation
+- [ ] 客戶端貢獻追蹤
+  - [ ] 撰寫測試：驗證貢獻分數計算
+  - [ ] 實作：updateContribution 函數
+  - [ ] 測試通過確認
 
-### Attack Resistance
-- [ ] Poisoning Attacks
-  - [ ] Implement varying attack intensities (10%, 20%, 30%)
-  - [ ] Add different attack strategies
-  - [ ] Create impact measurement
-  - [ ] Implement visualization of attack effects
-- [ ] Defense Comparison
-  - [ ] Add comparative analysis with/without Krum
-  - [ ] Implement alternative defense comparison
-  - [ ] Create security-performance tradeoff analysis
-  - [ ] Add mathematical verification
+### 1.5 Krum 防禦機制 [優先度: 高]
+- [ ] 模型更新提交
+  - [ ] 撰寫測試：驗證更新提交流程
+  - [ ] 實作：submitModelUpdate 函數
+  - [ ] 測試通過確認
 
-### Blockchain Efficiency
-- [ ] Layer-2 Benefits
-  - [ ] Measure rollup efficiency vs. direct L1
-  - [ ] Add cost comparison analysis
-  - [ ] Create scalability measurements
-  - [ ] Implement bottleneck identification
-- [ ] Optimization Results
-  - [ ] Add gas optimization measurements
-  - [ ] Implement storage efficiency analysis
-  - [ ] Create transaction throughput metrics
-  - [ ] Add cost projection for large-scale deployment
+- [ ] 更新距離計算
+  - [ ] 撰寫測試：驗證距離計算正確性
+  - [ ] 實作：computeDistances 函數
+  - [ ] 測試通過確認：使用簡單向量測試
 
-### Research Outputs
-- [ ] Data Collection
-  - [ ] Implement systematic data collection
-  - [ ] Add statistical analysis
-  - [ ] Create reproducibility framework
-  - [ ] Implement data validation
-- [ ] Visualization
-  - [ ] Add performance graphs generation
-  - [ ] Implement comparison charts
-  - [ ] Create tables for paper
-  - [ ] Add interactive visualizations for analysis
-- [ ] Documentation
-  - [ ] Implement methodology documentation
-  - [ ] Add experimental setup details
-  - [ ] Create result analysis
-  - [ ] Implement future work identification
+- [ ] Krum 選擇算法
+  - [ ] 撰寫測試：驗證 Krum 算法在預設情況下選擇正確
+  - [ ] 實作：executeKrum 函數
+  - [ ] 測試通過確認：使用已知結果的測試案例
 
-## Dependencies
-- Smart Contract Development → Blockchain Connector Enhancement
-- IPFS Integration → Federated Learning Core
-- Blockchain Connector Enhancement → Federated Learning Core
-- Federated Learning Core → Defense Mechanisms
-- Defense Mechanisms → Rollup System Development
-- All Components → Integration and Testing
-- Integration and Testing → Research Benchmarking and Evaluation
+- [ ] 最佳更新選擇
+  - [ ] 撰寫測試：驗證在混合更新中能夠選出非惡意的更新
+  - [ ] 實作：applyKrum 函數以整合距離計算和選擇
+  - [ ] 測試通過確認：使用惡意/非惡意混合的測試案例
 
-## Estimated Timeline
-- Smart Contract Development: 2 weeks
-- IPFS Integration and Enhancement: 1 week
-- Blockchain Connector Enhancement: 1 week
-- Federated Learning Core: 2 weeks
-- Defense Mechanisms: 1 week
-- Rollup System Development: 1 week
-- Integration and Testing: 1 week
-- Research Benchmarking and Evaluation: 2 weeks
+### 1.6 獎勵系統 [優先度: 低]
+- [ ] 獎勵計算邏輯
+  - [ ] 撰寫測試：驗證獎勵計算正確性
+  - [ ] 實作：calculateRewards 函數
+  - [ ] 測試通過確認
 
-Total Estimated Time: 11 weeks
+- [ ] 獎勵分發
+  - [ ] 撰寫測試：驗證獎勵分發流程
+  - [ ] 實作：distributeRewards 函數
+  - [ ] 測試通過確認
 
-## First Week Priority Tasks
-- Smart Contract Development: Task Management and Client Management
-- IPFS Integration: Model Storage adaptation
-- Blockchain Connector: Connection Management for Arbitrum
-- Federated Learning Core: Initial Server and Client structures
+## 2. IPFS 整合
+### 2.1 模型儲存 [優先度: 高]
+- [ ] 模型上傳功能
+  - [ ] 撰寫測試：驗證模型成功上傳到 IPFS
+  - [ ] 實作：upload_model 函數增強
+  - [ ] 測試通過確認：使用小型測試模型
 
-## Research-Specific Priority Tasks
-- Implement Krum algorithm and integration with rollup operator
-- Create poisoning attack simulation framework
-- Develop metrics collection for comparative analysis
-- Implement blockchain efficiency measurement tools
-- Set up visualization framework for research outputs
+- [ ] 模型下載功能
+  - [ ] 撰寫測試：驗證模型成功從 IPFS 下載
+  - [ ] 實作：download_model 函數優化
+  - [ ] 測試通過確認：驗證下載模型與上傳模型一致
+
+- [ ] 雜湊驗證機制
+  - [ ] 撰寫測試：驗證模型雜湊計算與驗證
+  - [ ] 實作：verify_model_hash 函數
+  - [ ] 測試通過確認：模型修改偵測
+
+### 2.2 更新管理 [優先度: 中]
+- [ ] 更新儲存功能
+  - [ ] 撰寫測試：驗證模型更新成功儲存
+  - [ ] 實作：store_update 函數
+  - [ ] 測試通過確認：使用多個測試更新
+
+- [ ] 批次操作
+  - [ ] 撰寫測試：驗證批次下載與處理
+  - [ ] 實作：batch_download 函數
+  - [ ] 測試通過確認：使用多個更新測試批次處理
+
+- [ ] 錯誤處理和重試機制
+  - [ ] 撰寫測試：模擬網絡錯誤並驗證重試機制
+  - [ ] 實作：重試邏輯和錯誤處理
+  - [ ] 測試通過確認：驗證在不同失敗情境下的行為
+
+## 3. 區塊鏈連接器增強
+### 3.1 Arbitrum 整合 [優先度: 高]
+- [ ] Arbitrum 連接設定
+  - [ ] 撰寫測試：驗證成功連接到 Arbitrum 測試網
+  - [ ] 實作：調整連接邏輯支援 Arbitrum
+  - [ ] 測試通過確認：連接參數與狀態檢查
+
+- [ ] Gas 優化
+  - [ ] 撰寫測試：比較優化前後的 gas 用量
+  - [ ] 實作：gas 估算和優化邏輯
+  - [ ] 測試通過確認：驗證 gas 用量減少
+
+### 3.2 交易管理 [優先度: 中]
+- [ ] 交易提交與監控
+  - [ ] 撰寫測試：驗證交易提交與確認流程
+  - [ ] 實作：transaction_lifecycle 函數
+  - [ ] 測試通過確認：交易狀態追蹤
+
+- [ ] 交易重試邏輯
+  - [ ] 撰寫測試：模擬交易失敗並驗證重試機制
+  - [ ] 實作：retry_transaction 函數
+  - [ ] 測試通過確認：測試不同失敗情境
+
+### 3.3 事件處理 [優先度: 中]
+- [ ] 事件監聽機制
+  - [ ] 撰寫測試：驗證事件訂閱與接收
+  - [ ] 實作：handle_events 函數
+  - [ ] 測試通過確認：模擬事件觸發和處理
+
+- [ ] 事件驅動動作
+  - [ ] 撰寫測試：驗證特定事件觸發預期動作
+  - [ ] 實作：事件處理回調系統
+  - [ ] 測試通過確認：事件鏈反應測試
+
+## 4. 聯邦學習核心
+### 4.1 Flower 伺服器 [優先度: 高]
+- [ ] 任務初始化與配置
+  - [ ] 撰寫測試：驗證伺服器配置與任務設定
+  - [ ] 實作：FLServer 類別初始化
+  - [ ] 測試通過確認：配置參數檢查
+
+- [ ] 客戶端選擇策略
+  - [ ] 撰寫測試：驗證客戶端選擇邏輯
+  - [ ] 實作：client_selection_strategy
+  - [ ] 測試通過確認：選擇結果驗證
+
+- [ ] 區塊鏈整合
+  - [ ] 撰寫測試：驗證伺服器與區塊鏈的互動
+  - [ ] 實作：blockchain_integration 模組
+  - [ ] 測試通過確認：合約互動測試
+
+### 4.2 模型管理 [優先度: 高]
+- [ ] 全局模型處理
+  - [ ] 撰寫測試：驗證全局模型初始化與更新
+  - [ ] 實作：manage_global_model 函數
+  - [ ] 測試通過確認：模型狀態檢查
+
+- [ ] 模型聚合
+  - [ ] 撰寫測試：驗證不同策略下的聚合結果
+  - [ ] 實作：aggregate_updates 函數
+  - [ ] 測試通過確認：使用已知結果的測試案例
+
+- [ ] 模型評估
+  - [ ] 撰寫測試：驗證評估指標計算
+  - [ ] 實作：evaluate_model 函數
+  - [ ] 測試通過確認：預定義模型評估
+
+### 4.3 Flower 客戶端 [優先度: 高]
+- [ ] 本地訓練邏輯
+  - [ ] 撰寫測試：驗證本地訓練流程與結果
+  - [ ] 實作：train_locally 函數
+  - [ ] 測試通過確認：使用小型測試數據集
+
+- [ ] 模型更新生成
+  - [ ] 撰寫測試：驗證更新格式與結構
+  - [ ] 實作：generate_update 函數
+  - [ ] 測試通過確認：更新結構驗證
+
+- [ ] 區塊鏈更新提交
+  - [ ] 撰寫測試：驗證更新提交流程
+  - [ ] 實作：submit_update_to_blockchain 函數
+  - [ ] 測試通過確認：交易確認檢查
+
+## 5. 防禦機制整合
+### 5.1 Krum 客戶端策略 [優先度: 高]
+- [ ] Krum 策略類別
+  - [ ] 撰寫測試：驗證策略初始化與配置
+  - [ ] 實作：KrumStrategy 類別
+  - [ ] 測試通過確認：配置參數檢查
+
+- [ ] 距離計算實作
+  - [ ] 撰寫測試：驗證不同模型間距離計算
+  - [ ] 實作：compute_distances 函數
+  - [ ] 測試通過確認：使用已知向量對
+
+- [ ] 模型選擇邏輯
+  - [ ] 撰寫測試：驗證 Krum 模型選擇
+  - [ ] 實作：select_model 函數
+  - [ ] 測試通過確認：多種測試情境
+
+### 5.2 整合測試 [優先度: 高]
+- [ ] 端到端防禦測試
+  - [ ] 撰寫測試：模擬真實訓練過程
+  - [ ] 實作：orchestrator 模組整合所有元件
+  - [ ] 測試通過確認：完整流程驗證
+
+- [ ] 防禦效果評估
+  - [ ] 撰寫測試：比較有無防禦下的模型質量
+  - [ ] 實作：defense_evaluation 函數
+  - [ ] 測試通過確認：指標比較
+
+## 6. 攻擊模擬與測試
+### 6.1 惡意客戶端模擬 [優先度: 中]
+- [ ] 標籤翻轉攻擊
+  - [ ] 撰寫測試：驗證攻擊實作與效果
+  - [ ] 實作：LabelFlippingAttack 類別
+  - [ ] 測試通過確認：檢查產生的惡意更新
+
+- [ ] 模型替換攻擊
+  - [ ] 撰寫測試：驗證攻擊實作與效果
+  - [ ] 實作：ModelReplacementAttack 類別
+  - [ ] 測試通過確認：檢查產生的惡意更新
+
+- [ ] 拜占庭行為
+  - [ ] 撰寫測試：驗證不一致行為
+  - [ ] 實作：ByzantineClient 類別
+  - [ ] 測試通過確認：檢查隨機行為模式
+
+### 6.2 攻擊成效評估 [優先度: 中]
+- [ ] 無防禦下的攻擊測試
+  - [ ] 撰寫測試：衡量攻擊對模型的影響
+  - [ ] 實作：measure_attack_impact 函數
+  - [ ] 測試通過確認：確認攻擊能成功影響未防禦模型
+
+- [ ] 有防禦下的攻擊測試
+  - [ ] 撰寫測試：衡量防禦有效性
+  - [ ] 實作：measure_defense_effectiveness 函數
+  - [ ] 測試通過確認：驗證防禦能抵抗攻擊
+
+## 7. 部署與評估
+### 7.1 Arbitrum 部署 [優先度: 中]
+- [ ] 部署腳本
+  - [ ] 撰寫測試：驗證部署流程
+  - [ ] 實作：deploy_to_arbitrum 腳本
+  - [ ] 測試通過確認：合約部署狀態檢查
+
+- [ ] Gas 分析
+  - [ ] 撰寫測試：記錄不同操作的 gas 用量
+  - [ ] 實作：gas_analysis 工具
+  - [ ] 測試通過確認：產生分析報告
+
+### 7.2 性能評估 [優先度: 低]
+- [ ] 系統吞吐量測試
+  - [ ] 撰寫測試：衡量系統處理更新的能力
+  - [ ] 實作：throughput_test 工具
+  - [ ] 測試通過確認：不同規模下的測試
+
+- [ ] 可擴展性評估
+  - [ ] 撰寫測試：測試不同規模下系統表現
+  - [ ] 實作：scalability_evaluation 函數
+  - [ ] 測試通過確認：不同客戶端數量下的性能
+
+### 7.3 結果視覺化 [優先度: 低]
+- [ ] 實驗結果圖表
+  - [ ] 撰寫測試：驗證視覺化輸出
+  - [ ] 實作：generate_charts 工具
+  - [ ] 測試通過確認：產生預期圖表
+
+- [ ] 互動式儀表板
+  - [ ] 撰寫測試：驗證儀表板功能
+  - [ ] 實作：dashboard 模組
+  - [ ] 測試通過確認：互動功能測試
+
+## 測試環境設置
+- [ ] 設置 Arbitrum 測試網絡連接
+- [ ] 設置本地 IPFS 節點
+- [ ] 建立模擬訓練數據集
+- [ ] 設置 CI/CD 流程以自動運行測試
+
+## 依賴關係
+- 基礎設施 → 任務管理 → 輪次管理 → Krum 防禦機制
+- IPFS 模型儲存 → 聯邦學習核心
+- Arbitrum 整合 → 交易管理 → 部署與評估
+- 聯邦學習核心 → 防禦機制整合
+- 惡意客戶端模擬 → 攻擊成效評估
+
+## 階段性交付計劃
+### 階段 1 (2 週)
+- 完成智能合約基礎設施和任務管理
+- 完成 IPFS 模型儲存功能
+- 完成 Arbitrum 連接設定
+- 完成基本測試環境設置
+
+### 階段 2 (2 週)
+- 完成輪次管理和客戶端管理
+- 完成 Krum 防禦機制合約部分
+- 完成區塊鏈交易和事件處理
+- 開始 Flower 伺服器和客戶端實作
+
+### 階段 3 (2 週)
+- 完成 Flower 伺服器和客戶端
+- 完成 Krum 防禦策略整合
+- 實作並測試惡意客戶端攻擊
+- 開始防禦效果評估
+
+### 階段 4 (2 週)
+- 完成攻擊模擬和防禦效果評估
+- 完成 Arbitrum 部署和 Gas 分析
+- 完成性能評估和視覺化
+- 整合所有組件並進行最終測試
+
+## 執行注意事項
+1. 每個任務都遵循 "先測試，後實作" 的原則
+2. 每個功能區塊必須有獨立測試並通過才能視為完成
+3. 優先完成高優先度任務
+4. 定期進行整合測試確保各部分協同工作
+5. 在每個階段結束時進行代碼審查和重構
