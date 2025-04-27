@@ -149,12 +149,12 @@ contract FederatedLearningTest is Test {
         
         // Verify task status
         (
-            ,
+            uint256 _,
             uint8 status,
-            ,
-            ,
-            ,
-            ,
+            uint256 __,
+            uint256 ___,
+            uint256 ____,
+            string memory _____,
             
         ) = flContract.getTaskInfo(taskId);
         
@@ -223,25 +223,25 @@ contract FederatedLearningTest is Test {
         
         // Verify round status
         (
-            ,
+            uint256 _1,
             uint8 status,
-            ,
-            ,
-            ,
-            ,
-            
+            uint256 _2,
+            uint256 _3,
+            uint256 _4,
+            uint256 _5,
+            string memory _6
         ) = flContract.getRoundInfo(1);
         
         assertEq(status, uint8(FederatedLearning.RoundStatus.Completed), "Round status should be Completed");
         
         // Verify task was updated
         (
-            ,
-            ,
-            ,
+            uint256 unused1,
+            uint8 unused2,
+            uint256 unused3,
             uint256 completedRounds,
-            ,
-            ,
+            uint256 unused4,
+            string memory unused5,
             string memory currentModelHash
         ) = flContract.getTaskInfo(taskId);
         
@@ -268,7 +268,7 @@ contract FederatedLearningTest is Test {
         flContract.startRound(taskId);
         
         // Verify round ID
-        (_, _, uint256 currentRoundId, _) = flContract.getSystemStatus();
+        (uint256 unused1, uint256 unused2, uint256 currentRoundId, uint8 unused3) = flContract.getSystemStatus();
         assertEq(currentRoundId, 2, "Current round ID should be 2");
     }
     
@@ -291,7 +291,7 @@ contract FederatedLearningTest is Test {
         assertEq(clientId2, 2, "Second client ID should be 2");
         
         // Verify client count
-        (uint256 totalClients, , , ) = flContract.getSystemStatus();
+        (uint256 totalClients, uint256 unused1, uint256 unused2, uint8 unused3) = flContract.getSystemStatus();
         assertEq(totalClients, 2, "Total clients should be 2");
         
         // Verify client info
@@ -379,13 +379,204 @@ contract FederatedLearningTest is Test {
         
         // Verify contribution score increased
         (
-            ,
-            ,
+            address unused1,
+            uint8 unused2,
             uint256 contributionScore,
-            ,
-            
+            uint256 unused3,
+            bool unused4
         ) = flContract.getClientInfo(clientId);
         
         assertGt(contributionScore, 0, "Contribution score should be increased");
+    }
+    
+    function testKrumDefense() public {
+        // Register 5 clients (need at least 2f+3=5 for Krum with f=1)
+        address client3 = address(0x4);
+        address client4 = address(0x5);
+        address client5 = address(0x6);
+        
+        vm.prank(client1);
+        uint256 clientId1 = flContract.registerClient();
+        
+        vm.prank(client2);
+        uint256 clientId2 = flContract.registerClient();
+        
+        vm.prank(client3);
+        uint256 clientId3 = flContract.registerClient();
+        
+        vm.prank(client4);
+        uint256 clientId4 = flContract.registerClient();
+        
+        vm.prank(client5);
+        uint256 clientId5 = flContract.registerClient();
+        
+        // Create a task and start a round
+        uint256 taskId = flContract.createTask("QmInitialModelHash", 5);
+        flContract.startRound(taskId);
+        
+        // Select all clients for the round
+        uint256[] memory selectedClients = new uint256[](5);
+        selectedClients[0] = clientId1;
+        selectedClients[1] = clientId2;
+        selectedClients[2] = clientId3;
+        selectedClients[3] = clientId4;
+        selectedClients[4] = clientId5;
+        flContract.selectClients(1, selectedClients);
+        
+        // Clients submit updates:
+        // - Clients 1, 2, 3 submit similar models (honest)
+        // - Clients 4, 5 submit malicious models (very different)
+        vm.prank(client1);
+        flContract.submitModelUpdate(clientId1, 1, "QmHonestModel1");
+        
+        vm.prank(client2);
+        flContract.submitModelUpdate(clientId2, 1, "QmHonestModel2");
+        
+        vm.prank(client3);
+        flContract.submitModelUpdate(clientId3, 1, "QmHonestModel3");
+        
+        vm.prank(client4);
+        flContract.submitModelUpdate(clientId4, 1, "QmMaliciousModel1");
+        
+        vm.prank(client5);
+        flContract.submitModelUpdate(clientId5, 1, "QmMaliciousModel2");
+        
+        // Apply Krum defense
+        uint256 selectedClientId = flContract.applyKrumDefense(1);
+        
+        // The selected client should be one of the honest clients
+        assertTrue(
+            selectedClientId == clientId1 || 
+            selectedClientId == clientId2 || 
+            selectedClientId == clientId3,
+            "Krum should select one of the honest clients"
+        );
+        
+        // Verify that the selected client's update was accepted
+        string memory selectedModelHash = flContract.getModelUpdateHash(selectedClientId, 1);
+        assertTrue(
+            keccak256(abi.encodePacked(selectedModelHash)) == keccak256(abi.encodePacked("QmHonestModel1")) ||
+            keccak256(abi.encodePacked(selectedModelHash)) == keccak256(abi.encodePacked("QmHonestModel2")) ||
+            keccak256(abi.encodePacked(selectedModelHash)) == keccak256(abi.encodePacked("QmHonestModel3")),
+            "Selected model should be one of the honest models"
+        );
+    }
+    
+    function testRewardSystem() public {
+        // Register client
+        vm.prank(client1);
+        uint256 clientId = flContract.registerClient();
+        
+        // Create a task and start a round
+        uint256 taskId = flContract.createTask("QmInitialModelHash", 5);
+        flContract.startRound(taskId);
+        
+        // Select client for round
+        uint256[] memory selectedClients = new uint256[](1);
+        selectedClients[0] = clientId;
+        flContract.selectClients(1, selectedClients);
+        
+        // Client submits an update
+        vm.prank(client1);
+        flContract.submitModelUpdate(clientId, 1, "QmModelUpdateHash123");
+        
+        // Operator accepts the update
+        flContract.acceptModelUpdate(clientId, 1);
+        
+        // Update global model and complete the round
+        flContract.updateGlobalModel(1, "QmNewGlobalModelHash");
+        flContract.completeRound(1);
+        
+        // Check reward calculation
+        uint256 calculatedReward = flContract.calculateReward(clientId);
+        assertGt(calculatedReward, 0, "Reward calculation should return a positive amount");
+        
+        // Distribute reward to client
+        vm.expectEmit(true, false, false, true);
+        emit FederatedLearning.RewardDistributed(clientId, calculatedReward);
+        
+        uint256 rewardAmount = flContract.rewardClient(clientId, 1);
+        assertEq(rewardAmount, calculatedReward, "Distributed reward should match calculated reward");
+        
+        // Check pending rewards
+        uint256 pendingRewards = flContract.getPendingRewards(client1);
+        assertEq(pendingRewards, calculatedReward, "Pending rewards should match distributed reward");
+        
+        // Client claims rewards
+        vm.prank(client1);
+        vm.expectEmit(true, false, false, true);
+        emit FederatedLearning.RewardsClaimed(client1, pendingRewards);
+        
+        uint256 claimedAmount = flContract.claimRewards();
+        assertEq(claimedAmount, calculatedReward, "Claimed amount should match distributed reward");
+        
+        // Verify rewards are reset after claiming
+        uint256 remainingRewards = flContract.getPendingRewards(client1);
+        assertEq(remainingRewards, 0, "Rewards should be zero after claiming");
+    }
+    
+    function testRewardDistribution() public {
+        // Register multiple clients
+        address client3 = address(0x4);
+        address client4 = address(0x5);
+        
+        vm.prank(client1);
+        uint256 clientId1 = flContract.registerClient();
+        
+        vm.prank(client2);
+        uint256 clientId2 = flContract.registerClient();
+        
+        vm.prank(client3);
+        uint256 clientId3 = flContract.registerClient();
+        
+        vm.prank(client4);
+        uint256 clientId4 = flContract.registerClient();
+        
+        // Create a task and start a round
+        uint256 taskId = flContract.createTask("QmInitialModelHash", 5);
+        flContract.startRound(taskId);
+        
+        // Select all clients for the round
+        uint256[] memory selectedClients = new uint256[](4);
+        selectedClients[0] = clientId1;
+        selectedClients[1] = clientId2;
+        selectedClients[2] = clientId3;
+        selectedClients[3] = clientId4;
+        flContract.selectClients(1, selectedClients);
+        
+        // Clients submit updates
+        vm.prank(client1);
+        flContract.submitModelUpdate(clientId1, 1, "QmModelUpdate1");
+        
+        vm.prank(client2);
+        flContract.submitModelUpdate(clientId2, 1, "QmModelUpdate2");
+        
+        vm.prank(client3);
+        flContract.submitModelUpdate(clientId3, 1, "QmModelUpdate3");
+        
+        // Client 4 does not submit
+        
+        // Accept some updates
+        flContract.acceptModelUpdate(clientId1, 1);
+        flContract.acceptModelUpdate(clientId3, 1);
+        
+        // Complete the round
+        flContract.updateGlobalModel(1, "QmNewGlobalModelHash");
+        flContract.completeRound(1);
+        
+        // Distribute rewards to all clients
+        uint256[] memory clientIds = new uint256[](4);
+        clientIds[0] = clientId1;
+        clientIds[1] = clientId2;
+        clientIds[2] = clientId3;
+        clientIds[3] = clientId4;
+        
+        flContract.distributeRewards(clientIds, 1);
+        
+        // Check pending rewards - only clients 1 and 3 should have rewards
+        assertGt(flContract.getPendingRewards(client1), 0, "Client 1 should have rewards");
+        assertEq(flContract.getPendingRewards(client2), 0, "Client 2 should not have rewards");
+        assertGt(flContract.getPendingRewards(client3), 0, "Client 3 should have rewards");
+        assertEq(flContract.getPendingRewards(client4), 0, "Client 4 should not have rewards");
     }
 }

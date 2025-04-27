@@ -2,7 +2,8 @@
 pragma solidity ^0.8.17;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "./libraries/KrumDefense.sol";
 
 /**
  * @title FederatedLearning
@@ -18,6 +19,8 @@ contract FederatedLearning is AccessControl, ReentrancyGuard {
     uint256 public minClientParticipation;
     uint256 public roundDuration;
     uint256 public challengePeriod;
+    uint256 public baseReward; // Base reward amount
+    mapping(address => uint256) public pendingRewards; // Rewards waiting to be claimed
     
     // Enums
     enum ClientStatus { Unregistered, Registered, Active, Suspended }
@@ -78,6 +81,9 @@ contract FederatedLearning is AccessControl, ReentrancyGuard {
     // System state
     uint256 public currentRound;
     
+    // Krum parameters
+    uint256 public byzantineClientsToTolerate;
+    
     // Events
     event ClientRegistered(uint256 indexed clientId, address indexed clientAddress);
     event RoundStarted(uint256 indexed roundId, uint256 startTime);
@@ -88,6 +94,8 @@ contract FederatedLearning is AccessControl, ReentrancyGuard {
     event TaskCreated(uint256 indexed taskId, string initialModelHash);
     event TaskCompleted(uint256 indexed taskId, string finalModelHash);
     event TaskTerminated(uint256 indexed taskId, string reason);
+    event RewardDistributed(uint256 indexed clientId, uint256 amount);
+    event RewardsClaimed(address indexed clientAddress, uint256 amount);
     
     /**
      * @dev Constructor that sets the admin role to the deployer
@@ -105,6 +113,8 @@ contract FederatedLearning is AccessControl, ReentrancyGuard {
         minClientParticipation = 3;
         roundDuration = 1 days;
         challengePeriod = 7 days;
+        byzantineClientsToTolerate = 1; // Default: tolerate 1 Byzantine client
+        baseReward = 10; // Base reward amount
         
         // Reset counters (in case of re-initialization)
         clientCount = 0;
@@ -530,6 +540,70 @@ contract FederatedLearning is AccessControl, ReentrancyGuard {
         return clients[clientId].roundParticipation[roundId];
     }
     
+    /**
+     * @dev Set the number of Byzantine clients to tolerate in Krum
+     * @param f Number of Byzantine clients to tolerate
+     */
+    function setByzantineClientsToTolerate(uint256 f) external onlyRole(ADMIN_ROLE) {
+        byzantineClientsToTolerate = f;
+    }
+    
+    /**
+     * @dev Apply Krum defense to select the most representative model update
+     * @param roundId ID of the round
+     * @return selectedClientId ID of the selected client
+     */
+    function applyKrumDefense(uint256 roundId) external onlyRole(OPERATOR_ROLE) returns (uint256) {
+        Round storage round = rounds[roundId];
+        require(round.roundId == roundId, "Round does not exist");
+        require(round.status == RoundStatus.Active, "Round is not active");
+        require(round.participantCount > 0, "No participants in this round");
+        
+        // Need at least 2f+3 clients for Krum
+        uint256 f = byzantineClientsToTolerate;
+        require(round.participantCount >= 2 * f + 3, "Not enough clients for Krum defense");
+        
+        // Collect model hashes and client IDs
+        string[] memory modelHashes = new string[](round.participantCount);
+        uint256[] memory participantIds = new uint256[](round.participantCount);
+        
+        uint256 index = 0;
+        for (uint256 i = 1; i <= clientCount; i++) {
+            if (round.clientParticipation[i]) {
+                modelHashes[index] = round.updates[i].modelUpdateHash;
+                participantIds[index] = i;
+                index++;
+            }
+        }
+        
+        // Execute Krum to select the most representative update
+        KrumDefense.KrumResult memory result = KrumDefense.executeKrum(
+            modelHashes,
+            participantIds,
+            f
+        );
+        
+        // Automatically accept the selected update
+        acceptModelUpdate(result.selectedClientId, roundId);
+        
+        // Return the selected client ID
+        return result.selectedClientId;
+    }
+    
+    /**
+     * @dev Get the model update hash from a specific client in a round
+     * @param clientId ID of the client
+     * @param roundId ID of the round
+     * @return modelUpdateHash Hash of the model update
+     */
+    function getModelUpdateHash(uint256 clientId, uint256 roundId) external view returns (string memory) {
+        Round storage round = rounds[roundId];
+        require(round.roundId == roundId, "Round does not exist");
+        require(round.clientParticipation[clientId], "Client did not participate in this round");
+        
+        return round.updates[clientId].modelUpdateHash;
+    }
+    
     // Custom Modifiers
     
     /**
@@ -572,5 +646,101 @@ contract FederatedLearning is AccessControl, ReentrancyGuard {
         require(clients[clientId].selectedForRound, "Client not selected for this round");
         require(!rounds[roundId].clientParticipation[clientId], "Client already participated in this round");
         _;
+    }
+    function getModelUpdateHash(uint256 clientId, uint256 roundId) external view returns (string memory) {
+        Round storage round = rounds[roundId];
+        require(round.roundId == roundId, "Round does not exist");
+        require(round.clientParticipation[clientId], "Client did not participate in this round");
+        
+        return round.updates[clientId].modelUpdateHash;
+    }
+    
+    /**
+     * @dev Set the base reward amount
+     * @param amount New base reward amount
+     */
+    function setBaseReward(uint256 amount) external onlyRole(ADMIN_ROLE) {
+        baseReward = amount;
+    }
+    
+    /**
+     * @dev Calculate rewards for a client based on contribution
+     * @param clientId ID of the client
+     * @return amount Reward amount
+     */
+    function calculateReward(uint256 clientId) public view returns (uint256) {
+        Client storage client = clients[clientId];
+        require(client.clientAddress != address(0), "Client does not exist");
+        
+        // Simple reward calculation based on contribution score
+        // More complex formulas could be implemented
+        return baseReward * (client.contributionScore + 10) / 10;
+    }
+    
+    /**
+     * @dev Reward a client for their contribution
+     * @param clientId ID of the client
+     * @param roundId ID of the round
+     * @return amount Reward amount
+     */
+    function rewardClient(uint256 clientId, uint256 roundId) external onlyRole(OPERATOR_ROLE) returns (uint256) {
+        Client storage client = clients[clientId];
+        require(client.clientAddress != address(0), "Client does not exist");
+        require(client.roundParticipation[roundId], "Client did not participate in this round");
+        require(rounds[roundId].status == RoundStatus.Completed, "Round is not completed");
+        
+        // Calculate reward
+        uint256 rewardAmount = calculateReward(clientId);
+        
+        // Add to pending rewards
+        pendingRewards[client.clientAddress] += rewardAmount;
+        
+        emit RewardDistributed(clientId, rewardAmount);
+        
+        return rewardAmount;
+    }
+    
+    /**
+     * @dev Distribute rewards to multiple clients
+     * @param clientIds Array of client IDs
+     * @param roundId ID of the round
+     */
+    function distributeRewards(uint256[] calldata clientIds, uint256 roundId) external onlyRole(OPERATOR_ROLE) {
+        for (uint256 i = 0; i < clientIds.length; i++) {
+            // Skip if reward fails (don't revert the whole transaction)
+            try this.rewardClient(clientIds[i], roundId) {
+                // Reward successful
+            } catch {
+                // Skip and continue with next client
+            }
+        }
+    }
+    
+    /**
+     * @dev Claim pending rewards
+     * @return amount Amount claimed
+     */
+    function claimRewards() external nonReentrant returns (uint256) {
+        address clientAddress = msg.sender;
+        uint256 amount = pendingRewards[clientAddress];
+        require(amount > 0, "No rewards to claim");
+        
+        // Reset pending rewards
+        pendingRewards[clientAddress] = 0;
+        
+        // In a real implementation, this would transfer tokens
+        // For this MVP, we just emit an event
+        emit RewardsClaimed(clientAddress, amount);
+        
+        return amount;
+    }
+    
+    /**
+     * @dev Check pending rewards for an address
+     * @param clientAddress Address to check
+     * @return amount Pending reward amount
+     */
+    function getPendingRewards(address clientAddress) external view returns (uint256) {
+        return pendingRewards[clientAddress];
     }
 }
