@@ -5,6 +5,9 @@ import os
 import json
 import requests
 from web3 import Web3
+# 在文件頂部添加
+from dotenv import load_dotenv
+load_dotenv()
 
 def test_web3_connection():
     """Test connection to Ethereum node."""
