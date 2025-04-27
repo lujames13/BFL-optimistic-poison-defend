@@ -94,20 +94,58 @@ IPFS 連接器負責模型和更新的去中心化存儲：
 
 ## 設置與安裝
 
+### 環境要求
+
+- Python 3.9+
+- Foundry (用於智能合約開發)
+- IPFS 節點
+- 以太坊錢包
+
 ```bash
 # 克隆儲存庫
 git clone https://github.com/yourusername/BFL-optimistic-poison-defend.git
 cd BFL-optimistic-poison-defend
 
-# 安裝依賴
-npm install
+# 安裝 Python 依賴
 pip install -r requirements.txt
 
-# 編譯智能合約
-npx hardhat compile
+# 安裝 Foundry (如果尚未安裝)
+curl -L https://foundry.paradigm.xyz | bash
+foundryup
 
-# 部署到 Arbitrum 測試網
-npx hardhat run scripts/deploy.js --network arbitrum-goerli
+# 安裝 Solidity 依賴
+forge install
+
+# 編譯智能合約
+forge build
+```
+
+### 配置
+
+1. 創建 `.env` 文件並設置以下變數：
+```
+PRIVATE_KEY=your_private_key_here
+ARBITRUM_SEPOLIA_RPC_URL=https://sepolia-rollup.arbitrum.io/rpc
+ARBITRUM_RPC_URL=https://arb1.arbitrum.io/rpc
+ARBISCAN_API_KEY=your_arbiscan_api_key
+```
+
+2. 確保 IPFS 節點正在運行：
+```bash
+# 啟動本地 IPFS 節點 (如果尚未運行)
+ipfs daemon
+```
+
+## 智能合約部署
+
+將合約部署到 Arbitrum 測試網：
+
+```bash
+# 部署到 Arbitrum Sepolia 測試網
+forge script script/Deploy.s.sol --rpc-url arbitrum_sepolia --private-key $PRIVATE_KEY --broadcast --verify
+
+# 運行合約測試
+forge test
 ```
 
 ## 使用方法
@@ -124,6 +162,44 @@ python attack/label_flipping.py --client_id "malicious1" --intensity 0.3
 
 # 運行評估
 python evaluation/defense_effectiveness.py --results_dir "results/"
+```
+
+## 文件結構
+
+```
+BFL-Optimistic-Poison-Defend/
+├── .env                          # 環境變數（私鑰、RPC URLs等）
+├── .gitignore                    # Git忽略檔案
+├── foundry.toml                  # Foundry 配置
+├── README.md                     # 專案說明
+├── TASKS.md                      # 任務清單
+│
+├── lib/                          # 外部依賴庫
+│   └── openzeppelin-contracts/   # OpenZeppelin 合約
+│
+├── script/                       # 部署和任務腳本
+│   └── Deploy.s.sol              # 部署腳本
+│
+├── src/                          # 合約原始碼
+│   ├── FederatedLearning.sol     # 主要的聯邦學習合約
+│   ├── interfaces/               # 介面定義
+│   └── libraries/                # 庫合約
+│       └── KrumDefense.sol       # Krum 防禦演算法庫
+│
+├── test/                         # 合約測試
+│   └── FederatedLearning.t.sol   # 主合約測試
+│
+├── fl/                           # 聯邦學習Python代碼
+│   ├── blockchain_connector.py   # 區塊鏈連接器
+│   ├── ipfs_connector.py         # IPFS連接器
+│   ├── client/                   # 客戶端實現
+│   └── server/                   # 服務器實現
+│
+├── attack/                       # 攻擊模擬實現
+├── evaluation/                   # 評估和性能測量工具
+│
+└── docs/                         # 文檔
+    └── sequenceDiagram.mmd       # 系統流程圖
 ```
 
 ## 性能與安全特性
