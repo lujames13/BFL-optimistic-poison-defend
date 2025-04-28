@@ -1,112 +1,160 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import "forge-std/Test.sol";
-import "../libraries/KrumDefense.sol";
-
-contract KrumDefenseTest is Test {
-    using KrumDefense for *;
-    
-    function setUp() public {}
-    
-    function testCalculateDistance() public {
-        string memory hash1 = "QmHash1";
-        string memory hash2 = "QmHash2";
-        string memory hash3 = "QmHash1"; // Same as hash1
-        
-        uint256 distance1 = KrumDefense.calculateDistance(hash1, hash2);
-        uint256 distance2 = KrumDefense.calculateDistance(hash1, hash3);
-        uint256 distance3 = KrumDefense.calculateDistance(hash2, hash3);
-        
-        // Same hash should have zero distance
-        assertEq(distance2, 0, "Distance between identical hashes should be 0");
-        
-        // Different hashes should have non-zero distance
-        assertGt(distance1, 0, "Distance between different hashes should be non-zero");
-        assertGt(distance3, 0, "Distance between different hashes should be non-zero");
-        
-        // Distance should be symmetric
-        assertEq(
-            KrumDefense.calculateDistance(hash1, hash2),
-            KrumDefense.calculateDistance(hash2, hash1),
-            "Distance calculation should be symmetric"
-        );
+/**
+ * @title KrumDefense
+ * @dev Library for implementing the Krum Byzantine-robust aggregation algorithm
+ * for federated learning model updates
+ */
+library KrumDefense {
+    struct Distance {
+        uint256 from;
+        uint256 to;
+        uint256 value;
     }
     
-    function testComputeDistances() public {
-        string[] memory hashes = new string[](3);
-        hashes[0] = "QmHash1";
-        hashes[1] = "QmHash2";
-        hashes[2] = "QmHash3";
-        
-        uint256[] memory clientIds = new uint256[](3);
-        clientIds[0] = 1;
-        clientIds[1] = 2;
-        clientIds[2] = 3;
-        
-        KrumDefense.Distance[] memory distances = KrumDefense.computeDistances(hashes, clientIds);
-        
-        // Should have 3 distances (for 3 clients)
-        assertEq(distances.length, 3, "Should compute 3 distances for 3 clients");
-        
-        // Verify distances are between correct clients
-        assertEq(distances[0].from, 1, "First distance should be from client 1");
-        assertEq(distances[0].to, 2, "First distance should be to client 2");
-        
-        assertEq(distances[1].from, 1, "Second distance should be from client 1");
-        assertEq(distances[1].to, 3, "Second distance should be to client 3");
-        
-        assertEq(distances[2].from, 2, "Third distance should be from client 2");
-        assertEq(distances[2].to, 3, "Third distance should be to client 3");
+    struct KrumResult {
+        uint256 selectedClientId;
+        uint256 score;
     }
     
-    function testExecuteKrum() public {
-        string[] memory hashes = new string[](5);
-        hashes[0] = "QmModelHash1";   // Normal model
-        hashes[1] = "QmModelHash2";   // Normal model (slightly different)
-        hashes[2] = "QmModelHash3";   // Normal model (slightly different)
-        hashes[3] = "QmMaliciousHash";  // Malicious model (very different)
-        hashes[4] = "QmAnotherMaliciousHash"; // Another malicious model
+    /**
+     * @dev Calculate distance between two model hashes
+     * @param hash1 First model hash
+     * @param hash2 Second model hash
+     * @return Distance value
+     */
+    function calculateDistance(string memory hash1, string memory hash2) public pure returns (uint256) {
+        // If the hashes are identical, distance is 0
+        if (keccak256(abi.encodePacked(hash1)) == keccak256(abi.encodePacked(hash2))) {
+            return 0;
+        }
         
-        uint256[] memory clientIds = new uint256[](5);
-        clientIds[0] = 1;
-        clientIds[1] = 2;
-        clientIds[2] = 3;
-        clientIds[3] = 4;
-        clientIds[4] = 5;
+        // Simple hash-based distance (uses XOR of hash values)
+        bytes32 h1 = keccak256(abi.encodePacked(hash1));
+        bytes32 h2 = keccak256(abi.encodePacked(hash2));
         
-        // Execute Krum with f=1 (1 Byzantine client)
-        KrumDefense.KrumResult memory result = KrumDefense.executeKrum(hashes, clientIds, 1);
+        uint256 distance = 0;
+        for (uint256 i = 0; i < 32; i++) {
+            distance += uint8(h1[i] ^ h2[i]);
+        }
         
-        // The selected client should be one of the normal models (1, 2, or 3)
-        assertTrue(
-            result.selectedClientId == 1 || 
-            result.selectedClientId == 2 || 
-            result.selectedClientId == 3,
-            "Krum should select one of the normal clients"
-        );
-        
-        // It shouldn't select the malicious models
-        assertTrue(
-            result.selectedClientId != 4 && 
-            result.selectedClientId != 5,
-            "Krum should not select a malicious client"
-        );
+        return distance;
     }
     
-    function testKrumWithNotEnoughClients() public {
-        string[] memory hashes = new string[](3);
-        hashes[0] = "QmHash1";
-        hashes[1] = "QmHash2";
-        hashes[2] = "QmHash3";
+    /**
+     * @dev Compute pairwise distances between all model updates
+     * @param hashes Array of model update hashes
+     * @param clientIds Array of client IDs corresponding to each hash
+     * @return Array of pairwise distances
+     */
+    function computeDistances(
+        string[] memory hashes, 
+        uint256[] memory clientIds
+    ) public pure returns (Distance[] memory) {
+        uint256 n = hashes.length;
+        require(n == clientIds.length, "Arrays must have same length");
         
-        uint256[] memory clientIds = new uint256[](3);
-        clientIds[0] = 1;
-        clientIds[1] = 2;
-        clientIds[2] = 3;
+        // Number of pairwise distances: n*(n-1)/2
+        uint256 distanceCount = (n * (n - 1)) / 2;
+        Distance[] memory distances = new Distance[](distanceCount);
         
-        // Try to execute Krum with f=1, which requires at least 2*f+3=5 clients
-        vm.expectRevert("Not enough clients for Krum with given f");
-        KrumDefense.executeKrum(hashes, clientIds, 1);
+        uint256 idx = 0;
+        for (uint256 i = 0; i < n; i++) {
+            for (uint256 j = i + 1; j < n; j++) {
+                distances[idx].from = clientIds[i];
+                distances[idx].to = clientIds[j];
+                distances[idx].value = calculateDistance(hashes[i], hashes[j]);
+                idx++;
+            }
+        }
+        
+        return distances;
+    }
+    
+    /**
+     * @dev Execute Krum algorithm to select the most representative model update
+     * @param hashes Array of model update hashes
+     * @param clientIds Array of client IDs corresponding to each hash
+     * @param f Number of Byzantine clients to tolerate
+     * @return Result containing the selected client ID and its score
+     */
+    function executeKrum(
+        string[] memory hashes, 
+        uint256[] memory clientIds,
+        uint256 f
+    ) public pure returns (KrumResult memory) {
+        uint256 n = hashes.length;
+        require(n == clientIds.length, "Arrays must have same length");
+        
+        // Krum requires at least 2f+3 clients to tolerate f Byzantine clients
+        require(n >= 2 * f + 3, "Not enough clients for Krum with given f");
+        
+        // Compute distances
+        Distance[] memory distances = computeDistances(hashes, clientIds);
+        
+        // For each client, compute sum of squared distances to n-f-1 nearest neighbors
+        uint256[] memory scores = new uint256[](n);
+        for (uint256 i = 0; i < n; i++) {
+            // Create array to store distances from client i to all other clients
+            uint256[] memory clientDistances = new uint256[](n - 1);
+            uint256 distIdx = 0;
+            
+            // Find all distances involving client i
+            for (uint256 j = 0; j < n; j++) {
+                if (i == j) continue;
+                
+                // Look for distance between i and j
+                bool found = false;
+                for (uint256 k = 0; k < distances.length; k++) {
+                    if ((distances[k].from == clientIds[i] && distances[k].to == clientIds[j]) ||
+                        (distances[k].from == clientIds[j] && distances[k].to == clientIds[i])) {
+                        clientDistances[distIdx] = distances[k].value;
+                        distIdx++;
+                        found = true;
+                        break;
+                    }
+                }
+                
+                require(found, "Distance not found");
+            }
+            
+            // Sort distances (simple bubble sort - could be optimized)
+            for (uint256 j = 0; j < clientDistances.length; j++) {
+                for (uint256 k = 0; k < clientDistances.length - j - 1; k++) {
+                    if (clientDistances[k] > clientDistances[k + 1]) {
+                        uint256 temp = clientDistances[k];
+                        clientDistances[k] = clientDistances[k + 1];
+                        clientDistances[k + 1] = temp;
+                    }
+                }
+            }
+            
+            // Compute score: sum of squared distances to n-f-1 nearest neighbors
+            uint256 score = 0;
+            uint256 neighborsToConsider = n - f - 1;
+            for (uint256 j = 0; j < neighborsToConsider; j++) {
+                score += clientDistances[j] * clientDistances[j]; // Square the distance
+            }
+            
+            scores[i] = score;
+        }
+        
+        // Find client with the smallest score (most central)
+        uint256 minScore = type(uint256).max;
+        uint256 selectedIdx = 0;
+        
+        for (uint256 i = 0; i < n; i++) {
+            if (scores[i] < minScore) {
+                minScore = scores[i];
+                selectedIdx = i;
+            }
+        }
+        
+        KrumResult memory result;
+        result.selectedClientId = clientIds[selectedIdx];
+        result.score = minScore;
+        
+        return result;
     }
 }

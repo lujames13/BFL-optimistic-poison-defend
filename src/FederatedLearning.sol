@@ -507,7 +507,7 @@ contract FederatedLearning is AccessControl, ReentrancyGuard {
      * @param roundId ID of the round
      */
     function acceptModelUpdate(uint256 clientId, uint256 roundId) 
-        external 
+        internal 
         onlyRole(OPERATOR_ROLE)
     {
         Round storage round = rounds[roundId];
@@ -596,13 +596,7 @@ contract FederatedLearning is AccessControl, ReentrancyGuard {
      * @param roundId ID of the round
      * @return modelUpdateHash Hash of the model update
      */
-    function getModelUpdateHash(uint256 clientId, uint256 roundId) external view returns (string memory) {
-        Round storage round = rounds[roundId];
-        require(round.roundId == roundId, "Round does not exist");
-        require(round.clientParticipation[clientId], "Client did not participate in this round");
-        
-        return round.updates[clientId].modelUpdateHash;
-    }
+
     
     // Custom Modifiers
     
