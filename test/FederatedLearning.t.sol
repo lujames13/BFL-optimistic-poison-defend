@@ -75,9 +75,9 @@ contract FederatedLearningTest is Test {
     }
     
     function testAccessControlRestriction() public {
-        // 使用基於字符串前綴的模糊匹配而不是精確字符串
+        // 使用準確的錯誤類型而不是字符串前綴
         vm.prank(client1);
-        vm.expectRevert(bytes("AccessControl:"));
+        vm.expectRevert(abi.encodeWithSignature("AccessControlUnauthorizedAccount(address,bytes32)", client1, ADMIN_ROLE));
         flContract.initialize();
     }
     
