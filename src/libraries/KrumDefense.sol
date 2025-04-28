@@ -24,19 +24,22 @@ library KrumDefense {
      * @param hash2 Second model hash
      * @return Distance value
      */
+    // 在 KrumDefense.sol 中，可以改進 calculateDistance 函數
     function calculateDistance(string memory hash1, string memory hash2) public pure returns (uint256) {
-        // If the hashes are identical, distance is 0
+        // 首先檢查是否完全相同
         if (keccak256(abi.encodePacked(hash1)) == keccak256(abi.encodePacked(hash2))) {
             return 0;
         }
         
-        // Simple hash-based distance (uses XOR of hash values)
+        // 使用 XOR 計算距離
         bytes32 h1 = keccak256(abi.encodePacked(hash1));
         bytes32 h2 = keccak256(abi.encodePacked(hash2));
         
         uint256 distance = 0;
         for (uint256 i = 0; i < 32; i++) {
-            distance += uint8(h1[i] ^ h2[i]);
+            // 計算每個字節的 XOR 距離
+            uint8 xor = uint8(h1[i] ^ h2[i]);
+            distance += uint256(xor); // 累計距離
         }
         
         return distance;

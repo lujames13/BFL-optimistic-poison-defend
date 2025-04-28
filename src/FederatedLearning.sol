@@ -13,7 +13,8 @@ contract FederatedLearning is AccessControl, ReentrancyGuard {
     // Roles
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
     bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
-    
+   
+
     // Public state variables
     address public admin;
     uint256 public minClientParticipation;
@@ -507,7 +508,7 @@ contract FederatedLearning is AccessControl, ReentrancyGuard {
      * @param roundId ID of the round
      */
     function acceptModelUpdate(uint256 clientId, uint256 roundId) 
-        internal 
+        public 
         onlyRole(OPERATOR_ROLE)
     {
         Round storage round = rounds[roundId];
@@ -596,7 +597,13 @@ contract FederatedLearning is AccessControl, ReentrancyGuard {
      * @param roundId ID of the round
      * @return modelUpdateHash Hash of the model update
      */
-
+    function getModelUpdateHash(uint256 clientId, uint256 roundId) external view returns (string memory) {
+        Round storage round = rounds[roundId];
+        require(round.roundId == roundId, "Round does not exist");
+        require(round.clientParticipation[clientId], "Client did not participate in this round");
+        
+        return round.updates[clientId].modelUpdateHash;
+    }
     
     // Custom Modifiers
     
@@ -641,13 +648,7 @@ contract FederatedLearning is AccessControl, ReentrancyGuard {
         require(!rounds[roundId].clientParticipation[clientId], "Client already participated in this round");
         _;
     }
-    function getModelUpdateHash(uint256 clientId, uint256 roundId) external view returns (string memory) {
-        Round storage round = rounds[roundId];
-        require(round.roundId == roundId, "Round does not exist");
-        require(round.clientParticipation[clientId], "Client did not participate in this round");
-        
-        return round.updates[clientId].modelUpdateHash;
-    }
+
     
     /**
      * @dev Set the base reward amount
