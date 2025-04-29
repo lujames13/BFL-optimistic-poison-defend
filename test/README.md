@@ -1,149 +1,225 @@
-# BFL-Optimistic-Poison-Defend 測試指南
+# Blockchain Federated Learning (BFL) MVP Test Plan
 
-本目錄包含 BFL-Optimistic-Poison-Defend 專案的單元測試。這些測試使用 Python 的 `unittest` 框架實現，旨在驗證系統各個組件的正確性與安全性。
+This document outlines a simplified test-driven development (TDD) approach for the Blockchain Federated Learning (BFL) MVP. The goal is to deploy the system to a local Arbitrum network and generate data visualizations for thesis research.
 
-## 測試結構
+## Simplified Test Structure
 
-測試套件包含以下模組的單元測試：
-
-1. **區塊鏈連接器** (`test_blockchain_connector.py`)：測試與 Arbitrum 區塊鏈的交互
-2. **IPFS 連接器** (`test_ipfs_connector.py`)：測試模型存儲與檢索
-3. **Flower 服務器** (`test_flower_server_unit.py`)：測試聯邦學習服務器功能
-4. **Flower 客戶端** (`test_flower_client_unit.py`)：測試聯邦學習客戶端功能
-5. **攻擊模擬器** (`test_attack_simulator.py`)：測試各種攻擊策略實現
-6. **防禦評估器** (`test_defense_effectiveness.py`)：測試防禦機制的評估功能
-
-## 運行測試
-
-### 運行所有測試
-
-要運行所有測試，請在專案根目錄中執行以下命令：
-
-```bash
-python -m test.run_all_tests
+```
+test/
+├── unit/                       # Basic unit tests for core components
+│   ├── test_flower_client.py   # Tests for FL client functionality
+│   ├── test_flower_server.py   # Tests for FL server setup
+│   ├── test_blockchain.py      # Tests for blockchain connector
+│   ├── test_ipfs.py            # Tests for IPFS storage
+│   └── test_krum.py            # Tests for Krum defense algorithm
+├── integration/                # Essential integration tests
+│   ├── test_fl_blockchain.py   # Tests FL and blockchain integration
+│   └── test_krum_defense.py    # Tests Krum defense effectiveness
+├── experiment/                 # Thesis experiment tests
+│   ├── test_honest_scenario.py # Baseline performance with honest clients
+│   ├── test_attack_scenario.py # Performance under attack
+│   └── test_metrics.py         # Data collection for thesis visualizations
+├── fixtures/                   # Test data and setup
+│   ├── model_fixtures.py       # Test models
+│   └── data_fixtures.py        # Test datasets
+└── README.md                   # This simplified test plan
 ```
 
-這將依次運行所有測試，並在結束時提供摘要報告。
+## MVP Testing Focus
 
-### 運行單個測試模組
+### 1. Unit Testing (Essential Components Only)
 
-要運行特定的測試模組，可以直接使用 Python 執行對應的測試檔案：
+#### 1.1 Flower Client/Server Tests
 
-```bash
-python -m test.test_blockchain_connector
-python -m test.test_ipfs_connector
-python -m test.test_flower_server_unit
-python -m test.test_flower_client_unit
-python -m test.test_attack_simulator
-python -m test.test_defense_effectiveness
+- Test basic client initialization and configuration
+- Test server setup and aggregation functionality
+- Test local training with test datasets
+- Test parameter serialization/deserialization
+
+#### 1.2 Blockchain Connector Tests
+
+- Test connection to local Arbitrum network
+- Test smart contract interaction (task creation, update submission)
+- Test event handling for training rounds
+- Test transaction submission and confirmation
+
+#### 1.3 IPFS Tests
+
+- Test model storage and retrieval
+- Test content addressing functionality
+- Test handling of model parameters
+
+#### 1.4 Krum Algorithm Tests
+
+- Test distance calculation between updates
+- Test selection of representative update
+- Test Byzantine-tolerant properties with simple attack examples
+
+### 2. Integration Testing (MVP Critical Paths)
+
+#### 2.1 FL-Blockchain Integration
+
+- Test end-to-end flow from model training to blockchain submission
+- Test round initialization and completion via blockchain
+- Test model update verification through the contract
+
+#### 2.2 Krum Defense Integration
+
+- Test Krum integration with Flower aggregation
+- Test defense effectiveness against basic attack scenarios
+
+### 3. Experiment Testing (For Thesis Data)
+
+#### 3.1 Baseline Performance
+
+- Test system convergence with honest clients
+- Measure accuracy, loss, and training time
+- Generate learning curves for thesis
+
+#### 3.2 Attack Scenarios
+
+- Test system under label flipping attack
+- Test system under model replacement attack
+- Measure impact on model quality
+- Generate comparative visualizations
+
+#### 3.3 Defense Effectiveness
+
+- Test system with Krum defense active
+- Measure improvements in robustness
+- Generate defense effectiveness visualizations
+
+## Test Environment
+
+### Local Testing Environment
+
+- Local Foundry Anvil node for Arbitrum simulation
+- Local IPFS node or mock
+- Simulated Flower clients and server
+- Small-scale test datasets (MNIST or similar)
+
+## Essential Test Data
+
+- **Simple Dataset**: MNIST or Fashion-MNIST (small subset)
+- **Attack Dataset**: Modified datasets with flipped labels or corrupted samples
+- **Validation Dataset**: Clean validation data for measuring performance
+
+## Minimal Mocking Strategy
+
+- **Blockchain Mocks**: Simple contract interface mocks for unit tests
+- **IPFS Mocks**: Basic content addressable storage simulation
+- **Client Mocks**: Simulate honest and Byzantine client behaviors
+
+## Example Test Cases
+
+### Unit Test Example
+
+```python
+def test_client_submits_update_to_blockchain():
+    # Arrange
+    client = FlowerClient(client_id=1, private_key=TEST_PRIVATE_KEY)
+    model = get_simple_model()  # A small test model
+    parameters = model.get_weights()
+
+    # Act
+    result = client.submit_update(parameters, round_id=1)
+
+    # Assert
+    assert result.success == True
+    assert result.transaction_hash is not None
 ```
 
-### 運行特定測試案例
+### Integration Test Example
 
-要運行特定的測試案例，可以使用以下格式：
+```python
+def test_krum_defends_against_label_flipping():
+    # Arrange
+    # Set up server with Krum defense
+    server = FlowerServer(defense="krum", byzantine_tolerance=1)
 
-```bash
-python -m unittest test.test_blockchain_connector.TestBlockchainConnector.test_initialization
+    # Create clients (4 honest, 1 malicious)
+    clients = [create_honest_client() for _ in range(4)]
+    clients.append(create_label_flipping_client())
+
+    # Act
+    # Run federated training for 5 rounds
+    results = run_federated_training(server, clients, rounds=5)
+
+    # Assert
+    # Check that final model accuracy is not significantly degraded
+    assert results.final_accuracy > 0.8  # Or whatever baseline is reasonable
+    # Check that malicious updates were rejected
+    assert results.client_selection_history[4] == 0  # Client 4 (malicious) never selected
 ```
 
-## 測試依賴
+### Experiment Test Example
 
-這些測試依賴以下軟體包：
+```python
+def test_generate_defense_comparison_data():
+    # Arrange
+    # Configure experiment parameters
+    experiment_configs = [
+        {"defense": None, "attack": "label_flipping", "attack_ratio": 0.2},
+        {"defense": "krum", "attack": "label_flipping", "attack_ratio": 0.2},
+    ]
 
-- Python 3.9+
-- unittest (Python 標準庫)
-- unittest.mock (Python 標準庫)
-- numpy
-- torch
-- matplotlib (用於防禦評估視覺化)
+    # Act
+    # Run experiments and collect results
+    results = []
+    for config in experiment_configs:
+        result = run_experiment(config, rounds=10)
+        results.append(result)
 
-## 測試覆蓋範圍
+    # Generate visualizations
+    accuracy_chart = generate_accuracy_comparison(results)
+    convergence_chart = generate_convergence_comparison(results)
 
-目前的測試套件覆蓋了以下功能：
+    # Assert
+    # Ensure data was generated
+    assert accuracy_chart is not None
+    assert convergence_chart is not None
+    # Save for thesis
+    accuracy_chart.save("thesis_figures/accuracy_comparison.png")
+    convergence_chart.save("thesis_figures/convergence_comparison.png")
+```
 
-### 區塊鏈連接器
+## MVP Test Execution
 
-- 初始化與連接
-- 交易建立與發送
-- 模型雜湊計算
-- 系統狀態查詢
-- 客戶端註冊
-- 模型更新提交
-- Krum 防禦應用
-- 錯誤處理
+```bash
+# Run all MVP tests
+pytest
 
-### IPFS 連接器
+# Run unit tests for quick development feedback
+pytest test/unit/
 
-- 初始化與連接
-- 模型上傳 (PyTorch 模型和 NumPy 陣列)
-- 模型下載與反序列化
-- 模型差異計算
-- 聯邦平均
-- 批量操作
-- 錯誤處理
+# Run specific component test
+pytest test/unit/test_blockchain.py
 
-### Flower 服務器
+# Run integration tests
+pytest test/integration/
 
-- 初始化與配置
-- 任務創建
-- 輪次管理
-- 客戶端選擇
-- 模型聚合 (使用 Krum 防禦)
-- Krum 防禦機制
-- 獎勵分發
+# Run experiment tests (generates thesis data)
+pytest test/experiment/
+```
 
-### Flower 客戶端
+## Data Collection for Thesis
 
-- 初始化與配置
-- 區塊鏈註冊
-- 模型下載與載入
-- 本地訓練
-- 模型評估
-- 更新提交
-- 輪次參與
+The test framework should collect the following metrics for thesis visualizations:
 
-### 攻擊模擬器
+1. **Model Accuracy** (per round)
+2. **Training Loss** (per round)
+3. **Selected Clients** (for Krum defense analysis)
+4. **Attack Impact** (comparison with/without defense)
+5. **Convergence Rate** (rounds to reach target accuracy)
+6. **Blockchain Transaction Data** (gas used, timing)
 
-- 標籤翻轉攻擊
-- 模型替換攻擊
-- 拜占庭攻擊
-- 目標型模型中毒攻擊
-- 攻擊執行流程
+## Conclusion
 
-### 防禦評估器
+This simplified MVP test plan focuses on the essential components needed to:
 
-- 任務歷史獲取
-- 模型下載與評估
-- 模型比較
-- Krum 防禦評估
-- 防禦有無比較
-- 攻擊影響評估
-- 報告生成
-- 視覺化圖表
+1. Verify the core functionality of the BFL system
+2. Ensure proper integration between Flower and the local Arbitrum network
+3. Validate the effectiveness of the Krum defense mechanism
+4. Generate the necessary data visualizations for the thesis
 
-## 注意事項
-
-1. 這些測試使用模擬 (mock) 對象來模擬外部依賴，如區塊鏈節點和 IPFS 節點，因此不需要實際連接到這些服務即可運行測試。
-
-2. 部分測試會在臨時目錄中創建檔案，如生成的報告和圖表，這些檔案會在測試完成後自動清理。
-
-3. 攻擊模擬器測試包含隨機元素，偶爾可能會因為隨機性而失敗。如遇此情況，請重新運行測試。
-
-4. 如果您修改了代碼，請確保運行測試以驗證修改沒有破壞現有功能。
-
-## 擴展測試
-
-如需為新功能新增測試，請按照以下步驟：
-
-1. 確定測試應該屬於哪個現有模組，或者是否需要創建新的測試模組。
-
-2. 對於新的測試模組，請遵循現有測試的結構：
-
-   - 導入必要的模組
-   - 定義一個繼承 `unittest.TestCase` 的測試類
-   - 實現 `setUp` 和 `tearDown` 方法
-   - 為每個需要測試的功能添加以 `test_` 開頭的測試方法
-
-3. 更新 `run_all_tests.py` 以包含新的測試模組。
-
-4. 確保新的測試不會干擾其他測試，尤其是清理測試創建的任何資源。
+By following this TDD approach, you'll build only what's needed for your MVP while ensuring the system works correctly and produces reliable research data.
