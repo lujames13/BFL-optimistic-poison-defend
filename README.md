@@ -38,6 +38,7 @@
 ### 智能合約 (單一合約架構)
 
 智能合約實現了以下核心功能：
+
 - 任務管理：創建、監控和完成聯邦學習任務
 - 輪次管理：初始化、追蹤和完成訓練輪次
 - 客戶端管理：註冊、選擇和貢獻評估
@@ -47,6 +48,7 @@
 ### IPFS 連接器
 
 IPFS 連接器負責模型和更新的去中心化存儲：
+
 - 模型上傳與下載：高效處理機器學習模型
 - 更新管理：存儲和檢索模型更新
 - 雜湊驗證：確保模型完整性和真實性
@@ -56,6 +58,7 @@ IPFS 連接器負責模型和更新的去中心化存儲：
 ### 區塊鏈連接器
 
 區塊鏈連接器連接聯邦學習系統與 Arbitrum 網絡：
+
 - Arbitrum 整合：適配 Layer-2 特定功能
 - 交易管理：提交、監控和重試機制
 - 事件處理：事件監聽與響應
@@ -66,12 +69,14 @@ IPFS 連接器負責模型和更新的去中心化存儲：
 基於 Flower 框架的聯邦學習實現：
 
 **服務器端**：
+
 - 任務初始化與配置
 - 客戶端選擇策略
 - 全局模型管理與聚合
 - 模型評估與進度追蹤
 
 **客戶端**：
+
 - 本地訓練邏輯
 - 模型更新生成
 - 區塊鏈更新提交
@@ -80,6 +85,7 @@ IPFS 連接器負責模型和更新的去中心化存儲：
 ### 防禦機制
 
 整合 Krum 算法抵禦投毒攻擊：
+
 - 更新距離計算
 - 鄰居選擇邏輯
 - 分數機制
@@ -88,6 +94,7 @@ IPFS 連接器負責模型和更新的去中心化存儲：
 ### 攻擊模擬
 
 實現多種攻擊模型用於測試防禦效果：
+
 - 標籤翻轉攻擊
 - 模型替換攻擊
 - 拜占庭行為模擬
@@ -113,9 +120,6 @@ pip install -r requirements.txt
 curl -L https://foundry.paradigm.xyz | bash
 foundryup
 
-# 安裝 Solidity 依賴
-forge install
-
 # 編譯智能合約
 forge build
 ```
@@ -123,6 +127,7 @@ forge build
 ### 配置
 
 1. 創建 `.env` 文件並設置以下變數：
+
 ```
 PRIVATE_KEY=your_private_key_here
 ARBITRUM_SEPOLIA_RPC_URL=https://sepolia-rollup.arbitrum.io/rpc
@@ -131,6 +136,7 @@ ARBISCAN_API_KEY=your_arbiscan_api_key
 ```
 
 2. 確保 IPFS 節點正在運行：
+
 ```bash
 # 啟動本地 IPFS 節點 (如果尚未運行)
 ipfs daemon
@@ -164,42 +170,39 @@ python attack/label_flipping.py --client_id "malicious1" --intensity 0.3
 python evaluation/defense_effectiveness.py --results_dir "results/"
 ```
 
-## 文件結構
+## 檔案結構
 
 ```
 BFL-Optimistic-Poison-Defend/
-├── .env                          # 環境變數（私鑰、RPC URLs等）
-├── .gitignore                    # Git忽略檔案
-├── foundry.toml                  # Foundry 配置
-├── README.md                     # 專案說明
-├── TASKS.md                      # 任務清單
+├── .gitignore                    # Git ignore file
+├── foundry.toml                  # Foundry configuration
+├── README.md                     # Project documentation
+├── TASKS.md                      # Task tracking list
+├── requirements.txt              # Python dependencies
 │
-├── lib/                          # 外部依賴庫
-│   └── openzeppelin-contracts/   # OpenZeppelin 合約
+├── fl/                           # Federated learning Python code
+│   └── blockchain_connector.py   # Blockchain connector for Flower integration
 │
-├── script/                       # 部署和任務腳本
-│   └── Deploy.s.sol              # 部署腳本
+├── ipfs_connector.py             # IPFS model storage connector
 │
-├── src/                          # 合約原始碼
-│   ├── FederatedLearning.sol     # 主要的聯邦學習合約
-│   ├── interfaces/               # 介面定義
-│   └── libraries/                # 庫合約
-│       └── KrumDefense.sol       # Krum 防禦演算法庫
+├── src/                          # Smart contract source code
+│   ├── FederatedLearning.sol     # Main federated learning contract
+│   └── libraries/                # Supporting libraries
+│       └── KrumDefense.sol       # Krum defense algorithm implementation
 │
-├── test/                         # 合約測試
-│   └── FederatedLearning.t.sol   # 主合約測試
+├── test/                         # Contract tests
+│   ├── FederatedLearning.t.sol   # Main contract tests
+│   ├── KrumDefense.t.sol         # Krum defense tests
+│   └── Setup.t.sol               # Environment setup tests
 │
-├── fl/                           # 聯邦學習Python代碼
-│   ├── blockchain_connector.py   # 區塊鏈連接器
-│   ├── ipfs_connector.py         # IPFS連接器
-│   ├── client/                   # 客戶端實現
-│   └── server/                   # 服務器實現
+├── script/                       # Deployment scripts
+│   └── Deploy.s.sol              # Contract deployment script
 │
-├── attack/                       # 攻擊模擬實現
-├── evaluation/                   # 評估和性能測量工具
+├── rules/                        # Development guidelines
+│   └── task-list.mdc             # Task list management rules
 │
-└── docs/                         # 文檔
-    └── sequenceDiagram.mmd       # 系統流程圖
+└── docs/                         # Documentation
+    └── sequenceDiagram.mmd       # System sequence diagram
 ```
 
 ## 性能與安全特性
@@ -215,24 +218,28 @@ BFL-Optimistic-Poison-Defend/
 本項目分為四個主要階段開發：
 
 ### 階段 1 (2 週)
+
 - 完成智能合約基礎設施和任務管理
 - 完成 IPFS 模型儲存功能
 - 完成 Arbitrum 連接設定
 - 完成基本測試環境設置
 
 ### 階段 2 (2 週)
+
 - 完成輪次管理和客戶端管理
 - 完成 Krum 防禦機制合約部分
 - 完成區塊鏈交易和事件處理
 - 開始 Flower 伺服器和客戶端實作
 
 ### 階段 3 (2 週)
+
 - 完成 Flower 伺服器和客戶端
 - 完成 Krum 防禦策略整合
 - 實作並測試惡意客戶端攻擊
 - 開始防禦效果評估
 
 ### 階段 4 (2 週)
+
 - 完成攻擊模擬和防禦效果評估
 - 完成 Arbitrum 部署和 Gas 分析
 - 完成性能評估和視覺化
