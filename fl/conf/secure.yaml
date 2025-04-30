@@ -1,0 +1,31 @@
+---
+# Secure configuration for Blockchain Federated Learning
+# This configuration uses the Krum defense mechanism
+
+# Import base configuration
+defaults:
+  - base
+  - _self_
+
+# Override specific settings for secure configuration
+defense:
+  use_krum: true
+  byzantine_threshold: 2 # Tolerate up to 2 Byzantine clients
+  multi_krum: true # Use Multi-Krum for better aggregation
+
+# Increase number of clients and rounds for better security
+fl:
+  num_rounds: 20
+  num_clients: 10
+  min_clients: 6
+
+# Use non-IID data partitioning to simulate realistic conditions
+dataset:
+  iid: false
+
+# Simulation settings for attack scenario
+simulation:
+  byzantine_clients: [2, 5, 8] # Three Byzantine clients
+  client_resources:
+    num_cpus: 1.0
+    num_gpus: 0.0

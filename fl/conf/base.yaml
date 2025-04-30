@@ -1,0 +1,69 @@
+---
+# Base configuration for Blockchain Federated Learning
+
+# Mode can be "server", "client", or "simulation"
+mode: "simulation"
+
+# Federated Learning settings
+fl:
+  num_rounds: 10
+  num_clients: 5
+  min_clients: 3
+  fraction_fit: 1.0 # Fraction of clients to use for training
+  local_epochs: 2 # Number of local epochs per round
+
+# Dataset settings
+dataset:
+  name: "mnist" # Options: "mnist", "fashion_mnist", "cifar10"
+  iid: true # Whether to use IID data partitioning
+  test_ratio: 0.1 # Ratio of data for server testing
+  val_ratio: 0.1 # Ratio of client data for validation
+
+# Model settings
+model:
+  name: "mlp" # Options: "mlp", "cnn"
+  input_shape: 784 # 28*28 for MNIST, FASHION_MNIST (flattened); (32, 32, 3) for CIFAR10
+  hidden_layers: [128, 64]
+  num_classes: 10
+  learning_rate: 0.001
+
+# Defense settings
+defense:
+  use_krum: true # Whether to use Krum defense
+  byzantine_threshold: 1 # Number of Byzantine clients to tolerate (f)
+  multi_krum: false # Whether to use Multi-Krum
+
+# Blockchain settings
+blockchain:
+  contract_address: "0x5FbDB2315678afecb367f032d93F642f64180aa3" # Example address (Forge default)
+  private_key: null # Will be provided via env var or command line
+  node_url: "http://127.0.0.1:8545" # Default Anvil URL
+
+# IPFS settings
+ipfs:
+  url: "http://localhost:5001/api/v0"
+
+# Server settings (for server mode)
+server:
+  address: "[::]:8080" # Default Flower server address
+  evaluate: true # Whether to evaluate on server-side test data
+  round_timeout: 3600 # Timeout for each round in seconds (1 hour)
+
+# Client settings (for client mode)
+client:
+  id: 0 # Client ID
+  byzantine: false # Whether this client is Byzantine
+  attack_type: null # One of: "label_flipping", "model_replacement", "random"
+  attack_params: # Parameters for the attack
+    flip_ratio: 0.5 # Ratio of labels to flip for label flipping attack
+    scale_factor: 10.0 # Scale factor for model replacement attack
+    direction: 1 # Direction for model replacement attack (1 or -1)
+
+# Simulation settings (for simulation mode)
+simulation:
+  use_ray: true # Whether to use Ray for simulation
+  ray_dashboard: false # Whether to enable Ray dashboard
+  byzantine_clients: [3, 4] # IDs of Byzantine clients
+  client_resources:
+    num_cpus: 1.0
+    num_gpus: 0.0
