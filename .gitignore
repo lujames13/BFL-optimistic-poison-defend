@@ -50,3 +50,6 @@ node_modules/
 coverage/
 lcov.info
 coverage.json
+
+# outputs
+outputs/

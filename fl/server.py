@@ -20,6 +20,30 @@ from fl.ipfs_connector import ModelIPFSConnector
 from fl.defense import krum_select
 
 
+def parameters_to_ndarrays(parameters: Parameters) -> NDArrays:
+    """Convert parameters to NumPy arrays.
+    
+    Args:
+        parameters: Parameters object from Flower.
+        
+    Returns:
+        List of NumPy arrays.
+    """
+    return fl.common.parameters_to_ndarrays(parameters)
+
+
+def ndarrays_to_parameters(ndarrays: NDArrays) -> Parameters:
+    """Convert NumPy arrays to parameters.
+    
+    Args:
+        ndarrays: List of NumPy arrays.
+        
+    Returns:
+        Parameters object for Flower.
+    """
+    return fl.common.ndarrays_to_parameters(ndarrays)
+
+
 def get_strategy(
     evaluate_fn: Optional[Callable[[NDArrays], Tuple[float, Dict[str, float]]]] = None,
     fraction_fit: float = 1.0,
@@ -48,31 +72,7 @@ def get_strategy(
         A Flower strategy configured based on the provided parameters.
     """
     if use_krum:
-        # Utility functions for parameter conversion
-
-def parameters_to_ndarrays(parameters: Parameters) -> NDArrays:
-    """Convert parameters to NumPy arrays.
-    
-    Args:
-        parameters: Parameters object from Flower.
-        
-    Returns:
-        List of NumPy arrays.
-    """
-    return fl.common.parameters_to_ndarrays(parameters)
-
-
-def ndarrays_to_parameters(ndarrays: NDArrays) -> Parameters:
-    """Convert NumPy arrays to parameters.
-    
-    Args:
-        ndarrays: List of NumPy arrays.
-        
-    Returns:
-        Parameters object for Flower.
-    """
-    return fl.common.ndarrays_to_parameters(ndarrays)
- Use a Byzantine-robust strategy
+        # Use a Byzantine-robust strategy
         return KrumFedAvg(
             fraction_fit=fraction_fit,
             fraction_evaluate=fraction_evaluate,
@@ -466,7 +466,7 @@ class BlockchainFlowerServer:
         )
         
         # Complete the task on blockchain
-        final_model_weights = ndarrays_to_parameters(self.model.get_weights())
+        final_model_weights = self.model.get_weights()
         final_model_hash = self.ipfs.upload_model(
             final_model_weights,
             model_id=f"final_model_task_{task_id}",
@@ -476,6 +476,3 @@ class BlockchainFlowerServer:
         self.complete_task(task_id, final_model_hash)
         
         return history
-
-
-#

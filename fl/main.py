@@ -263,8 +263,9 @@ def run_ray_simulation(cfg: DictConfig, model: tf.keras.Model, clients_data: Tup
     )
     
     # Define the evaluation function for the strategy
-    def evaluate_fn(weights):
-        return server.evaluate_model(weights)
+    def evaluate_fn(server_round, parameters, config):
+        # Ignore server_round and config, just pass parameters to evaluate_model
+        return server.evaluate_model(parameters)
     
     # Get the appropriate strategy
     from fl.server import get_strategy
@@ -351,6 +352,11 @@ def run_standard_simulation(cfg: DictConfig, model: tf.keras.Model, clients_data
     
     # Create a task on blockchain
     task_id = server.create_task(total_rounds=cfg.fl.num_rounds)
+    
+    # Define the evaluation function for the strategy
+    def evaluate_fn(server_round, parameters, config):
+        # Ignore server_round and config, just pass parameters to evaluate_model
+        return server.evaluate_model(parameters)
     
     # Run federated learning simulation round by round
     for round_num in range(1, cfg.fl.num_rounds + 1):

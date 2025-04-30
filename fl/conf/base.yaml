@@ -35,7 +35,7 @@ defense:
 
 # Blockchain settings
 blockchain:
-  contract_address: "0x5FbDB2315678afecb367f032d93F642f64180aa3" # Example address (Forge default)
+  contract_address: "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512" # Example address (Forge default)
   private_key: null # Will be provided via env var or command line
   node_url: "http://127.0.0.1:8545" # Default Anvil URL
 
